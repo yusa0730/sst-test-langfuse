@@ -110,13 +110,13 @@ ecrResources.asyncWorkerContainerRepository.repositoryUrl.apply((url) => {
                 environment: [
                   {
                     name: "SALT",
-                    // value: infraConfigResources.webSalt
-                    value: "OlJdIRNjb1T/Z2a892wur/7lxuRY2xwawEyfgzDIHI4="
+                    value: infraConfigResources.webSalt
+                    // value: "OlJdIRNjb1T/Z2a892wur/7lxuRY2xwawEyfgzDIHI4="
                   },
                   {
                     name: "ENCRIPTION_KEY",
-                    // value: infraConfigResources.encryptionKey
-                    value: "93ad754dbecbab246a581ebaaa637091b52bb9653e75a228140c1356ce0b4ca9"
+                    value: infraConfigResources.encryptionKey
+                    // value: "93ad754dbecbab246a581ebaaa637091b52bb9653e75a228140c1356ce0b4ca9"
                   },
                   {
                     name: "TELEMETRY_ENABLED",
