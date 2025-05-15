@@ -1,0 +1,43 @@
+version: 0.2
+phases:
+  install:
+    commands:
+      - export PNPM_VERSION=9.10.0
+      - curl -fsSL https://get.pnpm.io/install.sh | bash -
+      - export PNPM_HOME="$HOME/.local/share/pnpm"
+      - export PATH="$PNPM_HOME:$PATH"
+      - echo $PNPM_HOME
+      - echo $PATH
+      - pnpm -v
+  build:
+    commands:
+      - pnpm install --ignore-scripts --frozen-lockfile
+      - pnpm install
+      - echo "ENCODED_PRIVATE_KEY / ENCODED_PUBLIC_KEY の存在確認..."
+      - |
+        SECRETS=$(pnpm run secret:list --stage production)
+        has_private_key=false
+        has_public_key=false
+        echo "$SECRETS" | grep -q "ENCODED_PRIVATE_KEY=" && has_private_key=true
+        echo "$SECRETS" | grep -q "ENCODED_PUBLIC_KEY=" && has_public_key=true
+        if [ "$has_private_key" = false ] || [ "$has_public_key" = false ]; then
+          echo "ENCODED_PRIVATE_KEY または ENCODED_PUBLIC_KEY のいずれかが存在しません"
+          openssl genrsa -out private_key.pem 2048
+          openssl rsa -pubout -in private_key.pem -out public_key.pem
+          pnpm run secret:private --stage production --print-logs
+          pnpm run secret:public --stage=production --print-logs
+          echo $ENCODED_PRIVATE_KEY
+          echo $ENCODED_PUBLIC_KEY
+          cat private_key.pem
+          cat public_key.pem
+        else
+          echo "両方の secret が存在します"
+        fi
+      - pnpm run unlock --stage=production --print-logs
+      - rm -f private_key.pem public_key.pem
+      - pnpm run refresh --stage=production --print-logs
+      # - pnpm run remove --stage=production
+      - pnpm run deploy --stage=production --print-logs
+cache:
+  paths:
+    - ~/.pnpm-store/**/*

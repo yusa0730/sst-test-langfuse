@@ -1,0 +1,55 @@
+{
+  "name": "presigned-url-test",
+  "private": true,
+  "sideEffects": false,
+  "type": "module",
+  "scripts": {
+    "deploy": "sst deploy",
+    "remove": "sst remove",
+    "refresh": "sst refresh",
+    "unlock": "sst unlock",
+    "secret:encodekey": "sst secret set ENCODED_PUBLIC_KEY $ENCODED_PUBLIC_KEY",
+    "secret:public": "sst secret set ENCODED_PUBLIC_KEY < ./public_key.pem",
+    "secret:private": "sst secret set ENCODED_PRIVATE_KEY < ./private_key.pem",
+    "secret:private:encodeKey": "sst secret set ENCODED_PRIVATE_KEY $ENCODED_PRIVATE_KEY",
+    "secret:list": "sst secret list",
+    "init": "sst init",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@pulumi/aws": "^6.67.0",
+    "@pulumi/pulumi": "^3.167.0",
+    "@pulumi/random": "^4.18.2",
+    "@remix-run/node": "^2.15.2",
+    "@remix-run/react": "^2.15.2",
+    "@remix-run/serve": "^2.15.2",
+    "isbot": "^4.1.0",
+    "pulumi": "^0.0.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "sst": "3.6.9"
+  },
+  "devDependencies": {
+    "@remix-run/dev": "^2.15.2",
+    "@types/node": "^22.14.0",
+    "@types/react": "^18.2.20",
+    "@types/react-dom": "^18.2.7",
+    "@typescript-eslint/eslint-plugin": "^6.7.4",
+    "@typescript-eslint/parser": "^6.7.4",
+    "autoprefixer": "^10.4.19",
+    "eslint": "^8.38.0",
+    "eslint-import-resolver-typescript": "^3.6.1",
+    "eslint-plugin-import": "^2.28.1",
+    "eslint-plugin-jsx-a11y": "^6.7.1",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.4",
+    "typescript": "^5.1.6",
+    "vite": "^5.1.0",
+    "vite-tsconfig-paths": "^4.2.1"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
