@@ -5,6 +5,16 @@
 
 declare module "sst" {
   export interface Resource {
+    "sst-test-langfuse-aurora-serverless-production": {
+      "clusterArn": string
+      "database": string
+      "host": string
+      "password": string
+      "port": number
+      "secretArn": string
+      "type": "sst.aws.Postgres"
+      "username": string
+    }
   }
 }
 /// <reference path="sst-env.d.ts" />

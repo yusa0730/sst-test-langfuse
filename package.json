@@ -5,16 +5,16 @@
   "type": "module",
   "scripts": {
     "deploy": "sst deploy",
-    "remove": "sst remove",
+    "init": "sst init",
     "refresh": "sst refresh",
-    "unlock": "sst unlock",
+    "remove": "sst remove",
     "secret:encodekey": "sst secret set ENCODED_PUBLIC_KEY $ENCODED_PUBLIC_KEY",
-    "secret:public": "sst secret set ENCODED_PUBLIC_KEY < ./public_key.pem",
+    "secret:list": "sst secret list",
     "secret:private": "sst secret set ENCODED_PRIVATE_KEY < ./private_key.pem",
     "secret:private:encodeKey": "sst secret set ENCODED_PRIVATE_KEY $ENCODED_PRIVATE_KEY",
-    "secret:list": "sst secret list",
-    "init": "sst init",
-    "typecheck": "tsc"
+    "secret:public": "sst secret set ENCODED_PUBLIC_KEY < ./public_key.pem",
+    "typecheck": "tsc",
+    "unlock": "sst unlock"
   },
   "dependencies": {
     "@pulumi/aws": "^6.67.0",
@@ -27,7 +27,7 @@
     "pulumi": "^0.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "sst": "3.6.9"
+    "sst": "3.14.24"
   },
   "devDependencies": {
     "@remix-run/dev": "^2.15.2",
