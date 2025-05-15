@@ -1,48 +1,41 @@
 import { infraConfigResources } from "./infra-config";
-import { cloudwatchResources } from "./cloudwatch";
+import { vpcResources } from "./vpc";
+import { securityGroupResources } from "./security-group";
 import { serviceDiscoveryResources } from "./service-discovery";
 
-console.log("======ecs-cluster.ts start======");
+console.log("======ecs.ts start======");
 
 // ECS Cluster
-const ecsCluster = new aws.ecs.Cluster(
+const ecsCluster = new sst.aws.Cluster.v1(
   `${infraConfigResources.idPrefix}-cluster-${$app.stage}`,
   {
-    name: `${infraConfigResources.idPrefix}-cluster-${$app.stage}`,
-    settings: [{
-      name: "containerInsights",
-      value: "enabled",
-    }],
-    configuration: {
-      executeCommandConfiguration: {
-        logging: "OVERRIDE",
-        logConfiguration: {
-          cloudWatchLogGroupName: cloudwatchResources.ecsExecuteCommandLog.name,
+    vpc: {
+      id: vpcResources.vpc.id,
+      publicSubnets: vpcResources.albProtectedSubnets.map((subnet) => subnet.id),
+      privateSubnets: vpcResources.ecsProtectedSubnets.map((subnet) => subnet.id),
+      securityGroups: [
+        securityGroupResources.webServerSecurityGroup.id,
+        securityGroupResources.asyncWorkerSecurityGroup.id,
+        securityGroupResources.clickHouseServerSecurityGroup.id
+      ],
+    },
+    transform: {
+      cluster: {
+        name: `${infraConfigResources.idPrefix}-cluster-${$app.stage}`,
+        settings: [
+          {
+              name: "containerInsights",
+              value: "enhanced",
+          },
+        ],
+        serviceConnectDefaults: {
+          namespace: serviceDiscoveryResources.langfuseNamespace.arn,
         },
       },
     },
-    serviceConnectDefaults: {
-      namespace: serviceDiscoveryResources.langfuseNamespace.arn,
-    },
-    tags: {
-      Name: `${infraConfigResources.idPrefix}-cluster-${$app.stage}`,
-    },
-  }
-);
-
-// ECS Cluster Capacity Providers
-const ecsClusterCapacityProviders = new aws.ecs.ClusterCapacityProviders(
-  `${infraConfigResources.idPrefix}-cluster-capacity-providers-${$app.stage}`,
-  {
-    clusterName: ecsCluster.name,
-    capacityProviders: ["FARGATE"],
-    defaultCapacityProviderStrategies: [{
-      capacityProvider: "FARGATE",
-    }],
   }
 );
 
 export const ecsClusterResources = {
   ecsCluster,
-  ecsClusterCapacityProviders
 };
