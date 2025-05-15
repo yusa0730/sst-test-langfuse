@@ -3,7 +3,7 @@
 export default $config({
   app(input) {
     return {
-      name: "sst-test-presigned-url",
+      name: "sst-test-langfuse",
       home: "aws",
     };
   },
