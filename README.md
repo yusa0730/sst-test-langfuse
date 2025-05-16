@@ -1,41 +1,15 @@
-# Welcome to Remix!
+### sst-test-langfuse
 
-- 📖 [Remix docs](https://remix.run/docs)
+#### 前提条件
+- Node.js v22.11.0
+- pnpm がインストールされていること (`npm install -g pnpm`)
+- AWS CLI が設定済みであること（`aws configure` または `AWS_PROFILE` 環境変数）
 
-## Development
+#### 構築手順
 
-Run the dev server:
+- pnpm install
+- sst deploy --stage production
 
-```shellscript
-npm run dev
-```
-
-## Deployment
-
-First, build your app for production:
-
-```sh
-npm run build
-```
-
-Then run the app in production mode:
-
-```sh
-npm start
-```
-
-Now you'll need to pick a host to deploy it to.
-
-### DIY
-
-If you're familiar with deploying Node applications, the built-in Remix app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-- `build/server`
-- `build/client`
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever css framework you prefer. See the [Vite docs on css](https://vitejs.dev/guide/features.html#css) for more information.
-# sst-test-langfuse
+#### langfuse確認URL
+以下はAWS管理画面コンソールのALBのAレコードの例
+- http://sst-test-langfuse-alb-production-150477180.ap-northeast-1.elb.amazonaws.com

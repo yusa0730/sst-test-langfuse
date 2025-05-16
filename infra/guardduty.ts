@@ -2,7 +2,7 @@ import { infraConfigResources } from "./infra-config";
 import { s3Resources } from "./s3";
 
 // GuaruDuty用のIAMロール
-const presignedUrlGuarddutyIamRole = new aws.iam.Role(
+const cdnBucketGuarddutyIamRole = new aws.iam.Role(
   `${infraConfigResources.idPrefix}-cdn-bucket-guardduty-role-${$app.stage}`,
   {
     name: `${infraConfigResources.idPrefix}-cdn-bucket-guardduty-iar-${$app.stage}`,
@@ -38,10 +38,10 @@ const presignedUrlGuarddutyIamRole = new aws.iam.Role(
 );
 
 // GuardDuty
-const presignedUrlGuardduty = new aws.guardduty.MalwareProtectionPlan(
+const cdnBucketGuardduty = new aws.guardduty.MalwareProtectionPlan(
   `${infraConfigResources.idPrefix}-cdn-bucket-guardduty-malware-protection-plan-${$app.stage}`,
   {
-    role: presignedUrlGuarddutyIamRole.arn,
+    role: cdnBucketGuarddutyIamRole.arn,
     actions: [
       {
         taggings: [
@@ -53,7 +53,7 @@ const presignedUrlGuardduty = new aws.guardduty.MalwareProtectionPlan(
     ],
     protectedResource: {
       s3Bucket: {
-        bucketName: s3Resources.presignedUrlCdnBucket.bucket,
+        bucketName: s3Resources.cloudFrontLogBucket.bucket,
       },
     },
     tags: {
@@ -64,6 +64,6 @@ const presignedUrlGuardduty = new aws.guardduty.MalwareProtectionPlan(
 
 // export
 export const uploadBucketGuardDutyResources = {
-  presignedUrlGuarddutyIamRole,
-  presignedUrlGuardduty,
+  cdnBucketGuarddutyIamRole,
+  cdnBucketGuardduty,
 };

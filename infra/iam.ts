@@ -100,7 +100,6 @@ const edgeFunctionRole = new aws.iam.Role(
   },
 );
 
-
 const langfuseEcsTaskExecuteRole = new aws.iam.Role(
   `${infraConfigResources.idPrefix}-ecs-task-execute-iar-${$app.stage}`,
   {
@@ -126,18 +125,6 @@ const langfuseEcsTaskExecuteRole = new aws.iam.Role(
             "ecr:BatchCheckLayerAvailability",
             "ecr:GetDownloadUrlForLayer",
             "ecr:BatchGetImage",
-            // "ssmmessages:CreateControlChannel",
-            // "ssmmessages:CreateDataChannel",
-            // "ssmmessages:OpenControlChannel",
-            // "ssmmessages:OpenDataChannel",
-            // "ssm:UpdateInstanceInformation",
-            // "ec2messages:*",
-            // "ssm:StartSession",
-            // "ssm:DescribeSessions",
-            // "ssm:TerminateSession",
-            // "ssm:GetConnectionStatus",
-            // "ecs:ExecuteCommand",
-            // "logs:*"
           ],
           resources: ["*"],
           effect: "Allow",

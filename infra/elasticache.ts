@@ -3,36 +3,6 @@ import { vpcResources } from "./vpc";
 import { securityGroupResources } from "./security-group";
 import { cloudwatchResources } from "./cloudwatch";
 
-// // elasticache作成（valkey）
-// const elasticache = new aws.elasticache.ServerlessCache(
-//   `${infraConfigResources.idPrefix}-elasticache-${$app.stage}`,
-//   {
-//     engine: "valkey",
-//     name: `${infraConfigResources.idPrefix}-elasticache-${$app.stage}`,
-//     cacheUsageLimits: {
-//       dataStorage: {
-//         maximum: 10, // 最大5,000
-//         minimum: 1, // 最小1
-//         unit: "GB",
-//       },
-//       ecpuPerSeconds: [
-//         {
-//           maximum: 5000, // 最大15,000,000
-//           minimum: 1000, // 最小1,000
-//         },
-//       ],
-//     },
-//     dailySnapshotTime: "14:30",
-//     description: `${infraConfigResources.idPrefix}-${$app.stage}`,
-//     majorEngineVersion: "7",
-//     securityGroupIds: [securityGroupResources.elasticacheServerSecurityGroup.id],
-//     subnetIds: vpcResources.elasticachePrivateSubnets.map((subnet) => subnet.id),
-//     tags: {
-//       Name: `${infraConfigResources.idPrefix}-elasticache-${$app.stage}`,
-//     },
-//   },
-// );
-
 // ElastiCache Subnet Group
 const elasticacheSubnetGroup = new aws.elasticache.SubnetGroup(
   `${infraConfigResources.idPrefix}-elasticache-subnet-group-${$app.stage}`,

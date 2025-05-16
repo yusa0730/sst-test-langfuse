@@ -3,7 +3,6 @@ import { infraConfigResources } from "./infra-config";
 import { vpcResources } from "./vpc";
 import { securityGroupResources } from "./security-group";
 import { env } from "./env";
-import { bastionResources } from "./bastion";
 
 // Aurora Serverless作成
 const auroraServerless = new sst.aws.Postgres.v1(

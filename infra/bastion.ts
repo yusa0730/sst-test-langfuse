@@ -34,14 +34,6 @@ const ecsExecPolicy = new aws.iam.Policy(
             "ssm:DescribeSessions",
             "ssm:TerminateSession",
             "ssm:GetConnectionStatus",
-            "logs:DescribeLogGroups",
-            "logs:DescribeLogStreams",
-            "logs:GetLogEvents",
-            "ecs:DescribeTasks",
-            "ssm:StartSession",
-            "ssm:DescribeSessions",
-            "ssm:TerminateSession",
-            "ssm:GetConnectionStatus",
             "logs:*",
           ],
           Resource: "*"
@@ -112,8 +104,6 @@ const bastionInstance = new aws.ec2.Instance(
     sudo yum install -y https://s3.ap-northeast-1.amazonaws.com/amazon-ssm-ap-northeast-1/latest/linux_amd64/amazon-ssm-agent.rpm
     sudo systemctl start amazon-ssm-agent
     sudo systemctl enable amazon-ssm-agent
-    sudo git clone https://github.com/langfuse/langfuse.git
-    chown -R ec2-user:ec2-user /home/ec2-user/langfuse
     export PNPM_VERSION=9.10.0
     curl -fsSL https://get.pnpm.io/install.sh | bash -
     export PNPM_HOME="$HOME/.local/share/pnpm"
