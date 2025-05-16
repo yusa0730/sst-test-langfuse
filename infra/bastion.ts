@@ -97,7 +97,7 @@ const bastionInstance = new aws.ec2.Instance(
     userData: `#!/bin/bash
     cd /home/ec2-user
     sudo yum update -y
-    sudo dnf install -y postgresql15
+    sudo dnf install -y postgresql15 nodejs
     sudo yum install -y https://s3.ap-northeast-1.amazonaws.com/amazon-ssm-ap-northeast-1/latest/linux_amd64/amazon-ssm-agent.rpm
     sudo systemctl start amazon-ssm-agent
     sudo systemctl enable amazon-ssm-agent
