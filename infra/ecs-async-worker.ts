@@ -186,10 +186,10 @@ ecrResources.asyncWorkerContainerRepository.repositoryUrl.apply((url) => {
                     name: "CLICKHOUSE_PASSWORD",
                     value: infraConfigResources.clickhousePassword
                   },
-                  // {
-                  //   name: "DATABASE_URL",
-                  //   value: rdsResources.dbUrl
-                  // },
+                  {
+                    name: "DATABASE_URL",
+                    value: rdsResources.dbUrl
+                  },
                   {
                     name: "LANGFUSE_ENABLE_BACKGROUND_MIGRATIONS",
                     value: "true"
@@ -198,12 +198,12 @@ ecrResources.asyncWorkerContainerRepository.repositoryUrl.apply((url) => {
                   { name: "OTEL_EXPORTER_OTLP_ENDPOINT", value: "http://localhost:4318"},
                   { name: "OTEL_SERVICE_NAME", value: "langfuse"},
                 ],
-                secrets: [
-                  {
-                    name: "DATABASE_URL",
-                    valueFrom: rdsResources.dbUrlSecret.arn
-                  },
-                ],
+                // secrets: [
+                //   {
+                //     name: "DATABASE_URL",
+                //     valueFrom: rdsResources.dbUrlSecret.arn
+                //   },
+                // ],
               },
             ]),
           )

@@ -114,7 +114,7 @@ const cdn = new sst.aws.Cdn(
     },
     transform: {
       distribution: {
-        // webAclId: wafResources.cdnWaf.arn,
+        webAclId: wafResources.cdnWaf.arn,
         loggingConfig: {
           bucket: s3Resources.cloudFrontLogBucket.bucketRegionalDomainName,
           prefix: `${infraConfigResources.idPrefix}-cdn-${$app.stage}`,

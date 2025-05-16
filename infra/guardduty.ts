@@ -63,7 +63,7 @@ const cdnBucketGuardduty = new aws.guardduty.MalwareProtectionPlan(
 );
 
 // export
-export const uploadBucketGuardDutyResources = {
+export const cdnLogBucketGuardDutyResources = {
   cdnBucketGuarddutyIamRole,
   cdnBucketGuardduty,
 };
