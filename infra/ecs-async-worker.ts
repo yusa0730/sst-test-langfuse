@@ -175,6 +175,10 @@ ecrResources.asyncWorkerContainerRepository.repositoryUrl.apply((url) => {
                     value: elasticache.authToken
                   },
                   {
+                    name: "REDIS_TLS_ENABLED",
+                    value: "true"
+                  },
+                  {
                     name: "NODE_OPTIONS",
                     value: "--max-old-space-size=4096"
                   },

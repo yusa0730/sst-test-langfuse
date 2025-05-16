@@ -192,6 +192,10 @@ ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
                     value: elasticache.authToken
                   },
                   {
+                    name: "REDIS_TLS_ENABLED",
+                    value: "true"
+                  },
+                  {
                     name: "TELEMETRY_ENABLED",
                     value: "true"
                   },

@@ -41,32 +41,6 @@ const vpcFlowLogRole = new aws.iam.Role(
   },
 );
 
-// タスク実行ロール
-const taskExecutionRole = new aws.iam.Role(
-  `${infraConfigResources.idPrefix}-task-execution-role-${$app.stage}`,
-  {
-    name: `${infraConfigResources.idPrefix}-task-execution-role-${$app.stage}`,
-    assumeRolePolicy: $jsonStringify({
-      Version: "2012-10-17",
-      Statement: [
-        {
-          Action: "sts:AssumeRole",
-          Effect: "Allow",
-          Principal: {
-            Service: "ecs-tasks.amazonaws.com",
-          },
-        },
-      ],
-    }),
-    managedPolicyArns: [
-      "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
-    ],
-    tags: {
-      Name: `${infraConfigResources.idPrefix}-task-execution-role-${$app.stage}`,
-    },
-  },
-);
-
 // Lambda@edgeのIAM Role
 const edgeFunctionRole = new aws.iam.Role(
   `${infraConfigResources.idPrefix}-basic-lambda-iar-${$app.stage}`,
@@ -119,6 +93,7 @@ const langfuseEcsTaskExecuteRole = new aws.iam.Role(
         statements: [{
           actions: [
             "secretsmanager:*",
+            "s3:*",
             "logs:CreateLogStream",
             "logs:PutLogEvents",
             "ecr:GetAuthorizationToken",
@@ -198,7 +173,6 @@ new aws.iam.RolePolicyAttachment(
 
 export const iamResources = {
   vpcFlowLogRole,
-  taskExecutionRole,
   edgeFunctionRole,
   langfuseEcsTaskExecuteRole,
   langfuseEcsTaskRole,

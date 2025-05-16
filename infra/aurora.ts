@@ -17,6 +17,7 @@ const auroraServerless = new sst.aws.Postgres.v1(
         databaseName: "langfuse",
         masterUsername: "langfuse",
         enabledCloudwatchLogsExports: ["postgresql"],
+         // storage_encrypted: true,
         // TODO: Databae Insights Advansedの使用を検討する
         performanceInsightsEnabled: true,
         performanceInsightsRetentionPeriod:

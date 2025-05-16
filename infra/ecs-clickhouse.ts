@@ -60,7 +60,7 @@ ecrResources.clickHouseContainerRepository.repositoryUrl.apply((url) => {
           },
         },
         taskDefinition: {
-          executionRoleArn: iamResources.taskExecutionRole.arn,
+          executionRoleArn: iamResources.langfuseEcsTaskExecuteRole.arn,
           taskRoleArn: iamResources.langfuseEcsTaskRole.arn,
           volumes: [
             {
