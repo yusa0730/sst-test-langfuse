@@ -83,16 +83,16 @@ new aws.s3.BucketOwnershipControls(
 );
 
 const langfuseBlobBucket = new aws.s3.BucketV2(
-  `${infraConfigResources.idPrefix}-langfuse-blob-bucket-${$app.stage}`,
+  `${infraConfigResources.idPrefix}-blob-bucket-${$app.stage}`,
   {
-    bucket: `${infraConfigResources.idPrefix}-langfuse-blob-bucket-${$app.stage}`,
+    bucket: `${infraConfigResources.idPrefix}-blob-bucket-${$app.stage}`,
     forceDestroy: true,
   },
 );
 
 // aclの設定
 new aws.s3.BucketOwnershipControls(
-  `${infraConfigResources.idPrefix}-langfuse-blob-bucket-ownership-controls-${$app.stage}`,
+  `${infraConfigResources.idPrefix}-blob-bucket-ownership-controls-${$app.stage}`,
   {
     bucket: langfuseBlobBucket.id,
     rule: {
@@ -102,16 +102,16 @@ new aws.s3.BucketOwnershipControls(
 );
 
 const langfuseEventBucket = new aws.s3.BucketV2(
-  `${infraConfigResources.idPrefix}-langfuse-event-bucket-${$app.stage}`,
+  `${infraConfigResources.idPrefix}-event-bucket-${$app.stage}`,
   {
-    bucket: `${infraConfigResources.idPrefix}-langfuse-event-bucket-${$app.stage}`,
+    bucket: `${infraConfigResources.idPrefix}-event-bucket-${$app.stage}`,
     forceDestroy: true,
   },
 );
 
 // aclの設定
 new aws.s3.BucketOwnershipControls(
-  `${infraConfigResources.idPrefix}-langfuse-event-bucket-ownership-controls-${$app.stage}`,
+  `${infraConfigResources.idPrefix}-event-bucket-ownership-controls-${$app.stage}`,
   {
     bucket: langfuseEventBucket.id,
     rule: {
@@ -121,16 +121,16 @@ new aws.s3.BucketOwnershipControls(
 );
 
 const langfuseClickhouseBucket = new aws.s3.BucketV2(
-  `${infraConfigResources.idPrefix}-langfuse-clickhouse-bucket-${$app.stage}`,
+  `${infraConfigResources.idPrefix}-clickhouse-bucket-${$app.stage}`,
   {
-    bucket: `${infraConfigResources.idPrefix}-langfuse-clickhouse-bucket-${$app.stage}`,
+    bucket: `${infraConfigResources.idPrefix}-clickhouse-bucket-${$app.stage}`,
     forceDestroy: true,
   },
 );
 
 // aclの設定
 new aws.s3.BucketOwnershipControls(
-  `${infraConfigResources.idPrefix}-langfuse-clickhouse-bucket-ownership-controls-${$app.stage}`,
+  `${infraConfigResources.idPrefix}-clickhouse-bucket-ownership-controls-${$app.stage}`,
   {
     bucket: langfuseClickhouseBucket.id,
     rule: {
