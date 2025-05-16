@@ -15,9 +15,9 @@ export default $config({
     await import('./infra/bastion');
     await import('./infra/security-group');
     await import('./infra/acm');
-    // await import('./infra/waf');
+    await import('./infra/waf');
     await import('./infra/s3');
-    // await import('./infra/guardduty');
+    await import('./infra/guardduty');
     // await import('./infra/lambda');
     await import('./infra/alb');
     await import('./infra/service-discovery');
@@ -30,6 +30,6 @@ export default $config({
     await import('./infra/ecs-clickhouse');
     await import('./infra/ecs-async-worker');
     await import('./infra/ecs-web');
-    // await import('./infra/cloudfront');
+    await import('./infra/cloudfront');
   }
 });

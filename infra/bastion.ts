@@ -90,17 +90,14 @@ const bastionInstance = new aws.ec2.Instance(
   `${infraConfigResources.idPrefix}-bastion-${$app.stage}`,
   {
     ami: ami.then(a => a.id),
-    instanceType: "t3.micro",
-    // subnetId: vpcResources.asyncWorkerPrivateSubnets[0].id, // 🔁 Private/Public どちらでもOK（SSM用ならPrivateでも可）
+    instanceType: "t3.large",
     subnetId: vpcResources.bastionProtectedSubnets[0].id, // 🔁 Private/Public どちらでもOK（SSM用ならPrivateでも可）
     vpcSecurityGroupIds: [bastionSecurityGroup.id],
     iamInstanceProfile: bastionInstanceProfile.name,
     userData: `#!/bin/bash
     cd /home/ec2-user
     sudo yum update -y
-    sudo yum install -y git
-    sudo yum install -y nodejs
-    sudo dnf install -y postgresql15
+    sudo dnf install -y postgresql15 nodejs
     sudo yum install -y https://s3.ap-northeast-1.amazonaws.com/amazon-ssm-ap-northeast-1/latest/linux_amd64/amazon-ssm-agent.rpm
     sudo systemctl start amazon-ssm-agent
     sudo systemctl enable amazon-ssm-agent
@@ -108,6 +105,16 @@ const bastionInstance = new aws.ec2.Instance(
     curl -fsSL https://get.pnpm.io/install.sh | bash -
     export PNPM_HOME="$HOME/.local/share/pnpm"
     export PATH="$PNPM_HOME:$PATH"
+    sudo dnf install -y gcc gcc-c++ openssl-devel
+    curl -s http://download.redis.io/redis-stable.tar.gz -o redis-stable.tar.gz
+    tar zxf redis-stable.tar.gz
+    cd redis-stable/
+    make distclean
+    make redis-cli BUILD_TLS=yes
+    sudo install -m 0755 src/redis-cli /usr/local/bin/
+    which redis-cli
+    redis-cli -v
+    set +H
     `,
     tags: {
       Name: `${infraConfigResources.idPrefix}-bastion-${$app.stage}`,

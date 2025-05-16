@@ -108,14 +108,14 @@ ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
                   },
                 },
                 environment: [
-                  {
-                    name: "NEXTAUTH_URL",
-                    value: `http://${albDnsName}`
-                  },
                   // {
                   //   name: "NEXTAUTH_URL",
-                  //   value: `https://langfuse.${infraConfigResources.domainName}`
+                  //   value: `http://${albDnsName}`
                   // },
+                  {
+                    name: "NEXTAUTH_URL",
+                    value: `https://langfuse.${infraConfigResources.domainName}`
+                  },
                   {
                     name: "NEXTAUTH_SECRET",
                     value: infraConfigResources.webNextSecret
@@ -219,10 +219,10 @@ ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
                     name: "LANGFUSE_RETURN_FROM_CLICKHOUSE",
                     value: "true"
                   },
-                  // {
-                  //   name: "DATABASE_URL",
-                  //   value: rdsResources.dbUrl
-                  // },
+                  {
+                    name: "DATABASE_URL",
+                    value: rdsResources.dbUrl
+                  },
                   {
                     name: "CLICKHOUSE_PASSWORD",
                     value: infraConfigResources.clickhousePassword
@@ -231,12 +231,12 @@ ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
                   { name: "OTEL_EXPORTER_OTLP_ENDPOINT", value: "http://localhost:4318"},
                   { name: "OTEL_SERVICE_NAME", value: "langfuse"},
                 ],
-                secrets: [
-                  {
-                    name: "DATABASE_URL",
-                    valueFrom: rdsResources.dbUrlSecret.arn
-                  },
-                ],
+                // secrets: [
+                //   {
+                //     name: "DATABASE_URL",
+                //     valueFrom: rdsResources.dbUrlSecret.arn
+                //   },
+                // ],
               },
             ]),
           )
