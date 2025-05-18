@@ -1,7 +1,10 @@
 const ENV = {
   production: {
     bffRdsPerformanceInsightsRetentionInDays: 7,
-    awsMainRegion: "ap-northeast-1"
+    awsMainRegion: "ap-northeast-1",
+    vpcCidrBlock: "10.0.0.0/16",
+    rdsVpcFlowLogRetentionInDays: 30,
+    rdsVpcCidrBlock: "172.16.0.0/16"
   },
 } as const;
 

@@ -1,6 +1,6 @@
 import * as pulumi from "@pulumi/pulumi";
 import { infraConfigResources } from "./infra-config";
-import { vpcResources } from "./vpc";
+import { rdsVpcResources } from "./rds-vpc";
 import { securityGroupResources } from "./security-group";
 import { env } from "./env";
 
@@ -9,7 +9,7 @@ const auroraServerless = new sst.aws.Postgres.v1(
   `${infraConfigResources.idPrefix}-aurora-serverless-${$app.stage}`,
   {
     vpc: {
-      privateSubnets: vpcResources.auroraServerlessPrivateSubnets.map((subnet) => subnet.id),
+      privateSubnets: rdsVpcResources.rdsVpcPrivateSubnets.map((subnet) => subnet.id),
       securityGroups: [securityGroupResources.auroraServerlessSecurityGroup.id],
     },
     transform: {
@@ -100,9 +100,9 @@ new aws.ssm.Parameter(
 );
 
 const dbUrlSecret = new aws.secretsmanager.Secret(
-  `${infraConfigResources.idPrefix}-database-url-v8-${$app.stage}`,
+  `${infraConfigResources.idPrefix}-database-url-v9-${$app.stage}`,
   {
-    name: `${infraConfigResources.idPrefix}-database-url-v8-${$app.stage}`,
+    name: `${infraConfigResources.idPrefix}-database-url-v9-${$app.stage}`,
   }
 );
 

@@ -5,25 +5,6 @@
 
 declare module "sst" {
   export interface Resource {
-    "sst-test-langfuse-async-worker-ecs-service-production": {
-      "type": "sst.aws.Service"
-    }
-    "sst-test-langfuse-aurora-serverless-production": {
-      "clusterArn": string
-      "database": string
-      "host": string
-      "password": string
-      "port": number
-      "secretArn": string
-      "type": "sst.aws.Postgres"
-      "username": string
-    }
-    "sst-test-langfuse-clickhouse-ecs-service-production": {
-      "type": "sst.aws.Service"
-    }
-    "sst-test-langfuse-web-server-ecs-service-production": {
-      "type": "sst.aws.Service"
-    }
   }
 }
 /// <reference path="sst-env.d.ts" />

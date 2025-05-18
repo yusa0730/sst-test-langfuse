@@ -12,6 +12,8 @@ export default $config({
     await import('./infra/iam');
     await import('./infra/cloudwatch');
     await import('./infra/vpc');
+    await import('./infra/rds-vpc');
+    await import('./infra/vpc-peering');
     await import('./infra/bastion');
     await import('./infra/security-group');
     await import('./infra/acm');
@@ -23,7 +25,7 @@ export default $config({
     await import('./infra/service-discovery');
     await import('./infra/iam');
     await import('./infra/elasticache');
-    await import('./infra/aurora');
+    await import('./infra/rds');
     await import('./infra/efs');
     await import('./infra/ecs-cluster');
     await import('./infra/ecr');
