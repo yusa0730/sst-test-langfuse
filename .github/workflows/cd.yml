@@ -74,8 +74,9 @@ jobs:
       # - name: bff sst telemetly
       #   run: pnpm --filter bff run sst:telemetry --stage ${{ needs.setup.outputs.env_value }}
 
-      # - name: sst-langfuse sst remove
-      #   run: pnpm --filter sst-langfuse run remove --stage ${{ needs.setup.outputs.env_value }}
+      - name: sst-langfuse sst remove
+        run: pnpm run remove --stage ${{ needs.setup.outputs.env_value }}
+        # run: pnpm --filter sst-langfuse run remove --stage ${{ needs.setup.outputs.env_value }}
 
       # - name: sst-langfuse sst refresh
       #   run: pnpm --filter sst-langfuse run refresh --stage ${{ needs.setup.outputs.env_value }}
@@ -87,7 +88,7 @@ jobs:
       #     pnpm --filter bff run sst:secret:privateKey --stage ${{ needs.setup.outputs.env_value }}
       #     rm apps/bff/tmp_key.pem
 
-      - name: langfuse sst deploy
-        id: langfuse_sst_deploy
-        run: pnpm run deploy --stage ${{ needs.setup.outputs.env_value }}
-        # run: pnpm --filter sst-langfuse run deploy --stage ${{ needs.setup.outputs.env_value }}
+      # - name: langfuse sst deploy
+      #   id: langfuse_sst_deploy
+      #   run: pnpm run deploy --stage ${{ needs.setup.outputs.env_value }}
+      #   # run: pnpm --filter sst-langfuse run deploy --stage ${{ needs.setup.outputs.env_value }}
