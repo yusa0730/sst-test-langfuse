@@ -19,8 +19,8 @@ runs:
         cache: pnpm
         registry-url: "https://npm.pkg.github.com"
         # scope: "@test-workspace"
-        env:
-          NODE_AUTH_TOKEN: ${{ env.NODE_AUTH_TOKEN }}
+      env:
+        NODE_AUTH_TOKEN: ${{ env.NODE_AUTH_TOKEN }}
 
     # - name: Get pnpm store directory
     #   shell: bash
