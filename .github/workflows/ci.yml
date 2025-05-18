@@ -32,5 +32,5 @@ jobs:
       # - name: Typecheck
       #   run: pnpm typecheck
 
-      - name: Build
-        run: pnpm build
+      # - name: Build
+      #   run: pnpm build

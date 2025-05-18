@@ -85,6 +85,6 @@ jobs:
       #     pnpm --filter bff run sst:secret:privateKey --stage ${{ needs.setup.outputs.env_value }}
       #     rm apps/bff/tmp_key.pem
 
-      - name: bff sst deploy
-        id: bff_sst_deploy
+      - name: langfuse sst deploy
+        id: langfuse_sst_deploy
         run: pnpm --filter sst-langfuse run deploy --stage ${{ needs.setup.outputs.env_value }}
