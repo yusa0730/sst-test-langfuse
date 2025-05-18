@@ -89,4 +89,5 @@ jobs:
 
       - name: langfuse sst deploy
         id: langfuse_sst_deploy
-        run: pnpm --filter sst-langfuse run deploy --stage ${{ needs.setup.outputs.env_value }}
+        run: pnpm run deploy --stage ${{ needs.setup.outputs.env_value }}
+        # run: pnpm --filter sst-langfuse run deploy --stage ${{ needs.setup.outputs.env_value }}
