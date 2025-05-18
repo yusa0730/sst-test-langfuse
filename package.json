@@ -1,5 +1,5 @@
 {
-  "name": "presigned-url-test",
+  "name": "sst-langfuse",
   "private": true,
   "sideEffects": false,
   "type": "module",

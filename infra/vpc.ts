@@ -1,6 +1,7 @@
 import { infraConfigResources } from "./infra-config";
 import { iamResources } from "./iam";
 import { cloudwatchResources } from "./cloudwatch";
+import { env } from "./env";
 
 console.log("======vpc.ts start======");
 const publicSubnets = [];
@@ -11,12 +12,12 @@ const asyncWorkerProtectedSubnets = [];
 const clickHouseProtectedSubnets = [];
 const bastionProtectedSubnets = [];
 const elasticachePrivateSubnets = [];
-const auroraServerlessPrivateSubnets = [];
+const protectedRouteTables = [];
 
 const vpc = new aws.ec2.Vpc(
   `${infraConfigResources.idPrefix}-vpc-${$app.stage}`,
   {
-    cidrBlock: "10.0.0.0/16",
+    cidrBlock: env.vpcCidrBlock,
     enableDnsHostnames: true,
     enableDnsSupport: true,
     tags: {
@@ -161,6 +162,7 @@ const protectedRouteTable1a = new aws.ec2.RouteTable(
     }
   }
 );
+protectedRouteTables.push(protectedRouteTable1a);
 
 const protectedRouteTable1c = new aws.ec2.RouteTable(
   `${infraConfigResources.idPrefix}-protected-rtb-1c-${$app.stage}`,
@@ -171,6 +173,7 @@ const protectedRouteTable1c = new aws.ec2.RouteTable(
     }
   }
 );
+protectedRouteTables.push(protectedRouteTable1c);
 
 new aws.ec2.Route(
   `${infraConfigResources.idPrefix}-protected-default-route-1a-${$app.stage}`,
@@ -463,49 +466,6 @@ new aws.ec2.RouteTableAssociation(
   }
 );
 
-// =======aurora serverless network========
-const auroraServerlessPrivateSubnet1a = new aws.ec2.Subnet(
-  `${infraConfigResources.idPrefix}-aurora-serverless-private-subnet-1a-${$app.stage}`,
-  {
-    vpcId: vpc.id,
-    cidrBlock: `10.0.60.0/24`,
-    availabilityZone: "ap-northeast-1a",
-    tags: {
-      Name: `${infraConfigResources.idPrefix}-aurora-serverless-private-subnet-1a-${$app.stage}`
-    }
-  }
-);
-auroraServerlessPrivateSubnets.push(auroraServerlessPrivateSubnet1a);
-
-new aws.ec2.RouteTableAssociation(
-  `${infraConfigResources.idPrefix}-aurora-serverless-private-route-table-association-1a-${$app.stage}`,
-  {
-    routeTableId: privateRouteTable1a.id,
-    subnetId: auroraServerlessPrivateSubnet1a.id
-  }
-);
-
-const auroraServerlessPrivateSubnet1c = new aws.ec2.Subnet(
-  `${infraConfigResources.idPrefix}-aurora-serverless-private-subnet-1c-${$app.stage}`,
-  {
-    vpcId: vpc.id,
-    cidrBlock: `10.0.61.0/24`,
-    availabilityZone: "ap-northeast-1c",
-    tags: {
-      Name: `${infraConfigResources.idPrefix}-aurora-serverless-private-subnet-1c-${$app.stage}`
-    }
-  }
-);
-auroraServerlessPrivateSubnets.push(auroraServerlessPrivateSubnet1c);
-
-new aws.ec2.RouteTableAssociation(
-  `${infraConfigResources.idPrefix}-aurora-serverless-private-route-table-association-1c-${$app.stage}`,
-  {
-    routeTableId: privateRouteTable1c.id,
-    subnetId: auroraServerlessPrivateSubnet1c.id
-  }
-);
-
 // ======vpc endpoint=======
 const vpcEndpointS3Gateway = new aws.ec2.VpcEndpoint(
   `${infraConfigResources.idPrefix}-vpc-endpoint-s3-gateway-${$app.stage}`,
@@ -533,6 +493,6 @@ export const vpcResources = {
   clickHouseProtectedSubnets,
   bastionProtectedSubnets,
   elasticachePrivateSubnets,
-  auroraServerlessPrivateSubnets,
   vpcEndpointS3Gateway,
+  protectedRouteTables,
 };

@@ -1,0 +1,90 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows:
+      - CI
+    branches:
+      - main
+      - develop
+      - qa
+      - stg
+    types:
+      - completed
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      env_value: ${{ steps.set_env_main.outputs.env_value || steps.set_env_dev.outputs.env_value || steps.set_env_qa.outputs.env_value || steps.set_env_stg.outputs.env_value }}
+    steps:
+      - name: main
+        id: set_env_main
+        if: ${{ github.ref == 'refs/heads/main' }}
+        run: echo "env_value=production" >> $GITHUB_OUTPUT
+
+      - name: dev
+        id: set_env_dev
+        if: ${{ github.ref == 'refs/heads/develop' }}
+        run: echo "env_value=dev" >> $GITHUB_OUTPUT
+
+      - name: qa
+        id: set_env_qa
+        if: ${{ github.ref == 'refs/heads/qa' }}
+        run: echo "env_value=qa" >> $GITHUB_OUTPUT
+
+      - name: stg
+        id: set_env_stg
+        if: ${{ github.ref == 'refs/heads/stg' }}
+        run: echo "env_value=stg" >> $GITHUB_OUTPUT
+
+  deploy:
+    needs: setup
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      packages: read
+    environment:
+      name: ${{ needs.setup.outputs.env_value }}
+    outputs:
+      username: ${{ steps.bff_sst_deploy.outputs.username }}
+      password: ${{ steps.bff_sst_deploy.outputs.password }}
+      database: ${{ steps.bff_sst_deploy.outputs.database }}
+      host: ${{ steps.bff_sst_deploy.outputs.host }}
+      port: ${{ steps.bff_sst_deploy.outputs.port }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache for Turbo
+        uses: rharkor/caching-for-turbo@v1.5
+
+      - uses: ./.github/actions/setup-pnpm
+        with:
+          node_version: 22
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ap-northeast-1
+          role-to-assume: ${{ secrets.AWS_OPEN_ID_CONNECT_ROLE }}
+
+      # - name: bff sst telemetly
+      #   run: pnpm --filter bff run sst:telemetry --stage ${{ needs.setup.outputs.env_value }}
+
+      # - name: sst-langfuse sst remove
+      #   run: pnpm --filter sst-langfuse run remove --stage ${{ needs.setup.outputs.env_value }}
+
+      # - name: sst-langfuse sst refresh
+      #   run: pnpm --filter sst-langfuse run refresh --stage ${{ needs.setup.outputs.env_value }}
+
+      # - name: bff sst secret
+      #   run: |
+      #     echo "${{ secrets.CLOUDFRONT_PRIVATE_KEY }}" > ./tmp_key.pem
+      #     mv ./tmp_key.pem apps/bff/tmp_key.pem
+      #     pnpm --filter bff run sst:secret:privateKey --stage ${{ needs.setup.outputs.env_value }}
+      #     rm apps/bff/tmp_key.pem
+
+      - name: langfuse sst deploy
+        id: langfuse_sst_deploy
+        run: pnpm --filter sst-langfuse run deploy --stage ${{ needs.setup.outputs.env_value }}
