@@ -20,7 +20,7 @@ runs:
         registry-url: "https://npm.pkg.github.com"
         # scope: "@test-workspace"
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ env.NODE_AUTH_TOKEN }}
 
     # - name: Get pnpm store directory
     #   shell: bash
@@ -37,4 +37,4 @@ runs:
       run: pnpm install --frozen-lockfile
       shell: bash
       env:
-        NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        NODE_AUTH_TOKEN: ${{ env.NODE_AUTH_TOKEN }}

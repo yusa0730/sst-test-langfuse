@@ -25,6 +25,8 @@ jobs:
       - uses: ./.github/actions/setup-pnpm
         with:
           node_version: 22
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # - name: Lint
       #   run: pnpm format-and-lint
