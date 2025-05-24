@@ -91,7 +91,7 @@ const bastionInstance = new aws.ec2.Instance(
   {
     ami: ami.then(a => a.id),
     instanceType: "t3.large",
-    subnetId: vpcResources.bastionProtectedSubnets[0].id, // 🔁 Private/Public どちらでもOK（SSM用ならPrivateでも可）
+    subnetId: vpcResources.bastionPublicSubnet1a.id, // 🔁 Private/Public どちらでもOK（SSM用ならPrivateでも可）
     vpcSecurityGroupIds: [bastionSecurityGroup.id],
     iamInstanceProfile: bastionInstanceProfile.name,
     userData: `#!/bin/bash

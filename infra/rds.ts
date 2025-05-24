@@ -100,9 +100,9 @@ new aws.ssm.Parameter(
 );
 
 const dbUrlSecret = new aws.secretsmanager.Secret(
-  `${infraConfigResources.idPrefix}-database-url-v9-${$app.stage}`,
+  `${infraConfigResources.idPrefix}-database-url-v10-${$app.stage}`,
   {
-    name: `${infraConfigResources.idPrefix}-database-url-v9-${$app.stage}`,
+    name: `${infraConfigResources.idPrefix}-database-url-v10-${$app.stage}`,
   }
 );
 
@@ -125,7 +125,7 @@ const databaseUrlSecretVersion = new aws.secretsmanager.SecretVersion(
   `${infraConfigResources.idPrefix}-database-url-secret-${$app.stage}`,
   {
     secretId: dbUrlSecret.id,
-    secretString: dbUrl,
+    secretString: dbUrl.apply((url) => JSON.stringify({ db_url: url })),
   }
 );
 

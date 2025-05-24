@@ -146,7 +146,6 @@ new aws.ec2.RouteTableAssociation(
   }
 );
 
-
 // routeTableIdパラメータ登録
 // TODO: 値の登録に失敗しているので、コメントアウト
 // new aws.ssm.Parameter(`${idPrefix}-route-table-id-${$app.stage}`, {
@@ -157,7 +156,6 @@ new aws.ec2.RouteTableAssociation(
 //     .toString(),
 // });
 
-// export
 export const rdsVpcResources = {
   vpc,
   vpcFlowLog,

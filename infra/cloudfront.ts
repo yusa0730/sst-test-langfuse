@@ -91,8 +91,8 @@ const cdn = new sst.aws.Cdn(
           originReadTimeout: 10,
         },
         customHeaders: [{
-            name: "X-Custom-Header",
-            value: `${infraConfigResources.idPrefix}-cloudfront`,
+          name: "X-Custom-Header",
+          value: `${infraConfigResources.idPrefix}-cloudfront`,
         }],
       }
     ],
@@ -119,6 +119,8 @@ const cdn = new sst.aws.Cdn(
           bucket: s3Resources.cloudFrontLogBucket.bucketRegionalDomainName,
           prefix: `${infraConfigResources.idPrefix}-cdn-${$app.stage}`,
         },
+        isIpv6Enabled: true,
+        httpVersion: "http2and3"
       },
     },
   },

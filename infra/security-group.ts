@@ -82,7 +82,9 @@ const webServerSecurityGroup = new aws.ec2.SecurityGroup(
       cidrBlocks: ["0.0.0.0/0"],
     }],
 
-    tags: { Name: `${infraConfigResources.idPrefix}-web-server-sg-${$app.stage}` }
+    tags: {
+      Name: `${infraConfigResources.idPrefix}-web-server-sg-${$app.stage}`
+    }
   }
 );
 
@@ -108,7 +110,9 @@ const asyncWorkerSecurityGroup = new aws.ec2.SecurityGroup(`${infraConfigResourc
     cidrBlocks: ["0.0.0.0/0"],
   }],
   
-  tags: { Name: `${infraConfigResources.idPrefix}-async-worker-sg-${$app.stage}` }
+  tags: {
+    Name: `${infraConfigResources.idPrefix}-async-worker-sg-${$app.stage}`
+  }
 });
 
 const clickHouseServerSecurityGroup = new aws.ec2.SecurityGroup(
@@ -147,7 +151,9 @@ const clickHouseServerSecurityGroup = new aws.ec2.SecurityGroup(
       protocol: "-1",
       cidrBlocks: ["0.0.0.0/0"],
     }],
-    tags: { Name: `${infraConfigResources.idPrefix}-clickhouse-server-sg-${$app.stage}` }
+    tags: {
+      Name: `${infraConfigResources.idPrefix}-clickhouse-server-sg-${$app.stage}`
+    }
   }
 );
 
@@ -174,7 +180,9 @@ const auroraServerlessSecurityGroup = new aws.ec2.SecurityGroup(
       protocol: "-1",
       cidrBlocks: ["0.0.0.0/0"],
     }],
-    tags: { Name: `${infraConfigResources.idPrefix}-aurora-serverless-sg-${$app.stage}` }
+    tags: {
+      Name: `${infraConfigResources.idPrefix}-aurora-serverless-sg-${$app.stage}`
+    }
   }
 );
 
@@ -202,7 +210,9 @@ const elasticacheServerSecurityGroup = new aws.ec2.SecurityGroup(
       protocol: "-1",
       cidrBlocks: ["0.0.0.0/0"],
     }],
-    tags: { Name: `${infraConfigResources.idPrefix}-elasticache-server-sg-${$app.stage}` }
+    tags: {
+      Name: `${infraConfigResources.idPrefix}-elasticache-server-sg-${$app.stage}`
+    }
   }
 );
 
@@ -227,7 +237,38 @@ const efsSecurityGroup = new aws.ec2.SecurityGroup(
       protocol: "-1",
       cidrBlocks: ["0.0.0.0/0"],
     }],
-    tags: { Name: `${infraConfigResources.idPrefix}-efs-sg-${$app.stage}` }
+    tags: {
+      Name: `${infraConfigResources.idPrefix}-efs-sg-${$app.stage}`
+    }
+  }
+);
+
+const vpcEndpointSecurityGroup = new aws.ec2.SecurityGroup(
+  `${infraConfigResources.idPrefix}-vpc-endpoint-sg-${$app.stage}`,
+  {
+    name: `${infraConfigResources.idPrefix}-vpc-endpoint-sg-${$app.stage}`,
+    vpcId: vpcResources.vpc.id,
+    description: "EFS SG",
+    ingress: [{
+      fromPort: 443,
+      toPort: 443,
+      protocol: "tcp",
+      securityGroups: [
+        webServerSecurityGroup.id,
+        asyncWorkerSecurityGroup.id,
+        clickHouseServerSecurityGroup.id
+      ],
+      description: "Allow ECS Access SG",
+    }],
+    egress: [{
+      fromPort: 0,
+      toPort: 0,
+      protocol: "-1",
+      cidrBlocks: ["0.0.0.0/0"],
+    }],
+    tags: {
+      Name: `${infraConfigResources.idPrefix}-efs-sg-${$app.stage}`
+    }
   }
 );
 
@@ -238,5 +279,6 @@ export const securityGroupResources = {
   clickHouseServerSecurityGroup,
   auroraServerlessSecurityGroup,
   elasticacheServerSecurityGroup,
-  efsSecurityGroup
+  efsSecurityGroup,
+  vpcEndpointSecurityGroup
 };
