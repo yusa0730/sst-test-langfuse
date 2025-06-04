@@ -18,11 +18,10 @@ ecrResources.clickHouseContainerRepository.repositoryUrl.apply((url) => {
     {
       cpu: "1 vCPU",
       memory: "8 GB",
-      storage: "21 GB",
       architecture: "arm64",
       scaling: {
-        min: 1,
-        max: 1,
+        min: 2,
+        max: 3,
         cpuUtilization: 70,
         memoryUtilization: 70,
       },
@@ -43,10 +42,8 @@ ecrResources.clickHouseContainerRepository.repositoryUrl.apply((url) => {
           enableExecuteCommand: true,
           healthCheckGracePeriodSeconds: 180,
           forceNewDeployment: true,
-          // serviceConnectConfiguration: {
-          //   enabled: true
-          // },
-          desiredCount: 1,
+          desiredCount: 2,
+          availabilityZoneRebalancing: "ENABLED",
           launchType: "FARGATE",
           serviceRegistries: {
             registryArn: serviceDiscoveryResources.clickhouseService.arn,
@@ -105,8 +102,6 @@ ecrResources.clickHouseContainerRepository.repositoryUrl.apply((url) => {
               {
                 name: `${infraConfigResources.idPrefix}-clickhouse-ecs-task-${$app.stage}`,
                 image: `${url}:latest`,
-                cpu: 1024,
-                memory: 8192,
                 essential: true,
                 ulimits: [
                   {

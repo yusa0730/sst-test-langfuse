@@ -100,9 +100,9 @@ new aws.ssm.Parameter(
 );
 
 const dbUrlSecret = new aws.secretsmanager.Secret(
-  `${infraConfigResources.idPrefix}-database-url-v10-${$app.stage}`,
+  `${infraConfigResources.idPrefix}-database-url-v11-${$app.stage}`,
   {
-    name: `${infraConfigResources.idPrefix}-database-url-v10-${$app.stage}`,
+    name: `${infraConfigResources.idPrefix}-database-url-v11-${$app.stage}`,
   }
 );
 

@@ -136,9 +136,9 @@ const langfuseEcsTaskRole = new aws.iam.Role(
 );
 
 const langfuseEcsTaskRolePolicy = new aws.iam.Policy(
-  `${infraConfigResources.idPrefix}-langfuse-ecs-task-iap-${$app.stage}`,
+  `${infraConfigResources.idPrefix}-ecs-task-iap-${$app.stage}`,
   {
-    name: `${infraConfigResources.idPrefix}-langfuse-ecs-task-iap-${$app.stage}`,
+    name: `${infraConfigResources.idPrefix}-ecs-task-iap-${$app.stage}`,
     description: "Task Role Policy for Langfuse",
     policy: aws.iam.getPolicyDocumentOutput({
       statements: [{
@@ -158,7 +158,7 @@ const langfuseEcsTaskRolePolicy = new aws.iam.Policy(
       }],
     }).json,
     tags: {
-      Name: `${infraConfigResources.idPrefix}-langfuse-ecs-task-iap-${$app.stage}`,
+      Name: `${infraConfigResources.idPrefix}-ecs-task-iap-${$app.stage}`,
     },
   }
 );

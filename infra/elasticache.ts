@@ -25,7 +25,11 @@ const elasticache = new aws.elasticache.ReplicationGroup(
     engine: "valkey",
     engineVersion: "7.2",
     nodeType: "cache.t4g.small",
-    numCacheClusters: 1,
+    // numCacheClusters: 1,
+    replicasPerNodeGroup: 1,
+    numNodeGroups: 1, // 追加
+    multiAzEnabled: true,
+    automaticFailoverEnabled: true,
     port: 6379,
     subnetGroupName: elasticacheSubnetGroup.name,
     securityGroupIds: [securityGroupResources.elasticacheServerSecurityGroup.id],

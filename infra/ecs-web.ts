@@ -20,11 +20,10 @@ ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
     {
       cpu: "2 vCPU",
       memory: "4 GB",
-      storage: "21 GB",
       architecture: "arm64",
       scaling: {
-        min: 1,
-        max: 1,
+        min: 2,
+        max: 3,
         cpuUtilization: 70,
         memoryUtilization: 70,
       },
@@ -89,8 +88,6 @@ ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
               {
                 name: `${infraConfigResources.idPrefix}-web-server-ecs-task-${$app.stage}`,
                 image: `${url}:latest`,
-                cpu: 1024,
-                memory: 4096,
                 essential: true,
                 portMappings: [
                   {
