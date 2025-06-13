@@ -4,7 +4,8 @@ const ENV = {
     awsMainRegion: "ap-northeast-1",
     vpcCidrBlock: "10.0.0.0/16",
     rdsVpcFlowLogRetentionInDays: 30,
-    rdsVpcCidrBlock: "172.16.0.0/16"
+    rdsVpcCidrBlock: "172.16.0.0/16",
+    bffDnsFirewallLogRetentionInDays: 30
   },
 } as const;
 

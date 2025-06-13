@@ -20,8 +20,8 @@ ecrResources.clickHouseContainerRepository.repositoryUrl.apply((url) => {
       memory: "8 GB",
       architecture: "arm64",
       scaling: {
-        min: 2,
-        max: 3,
+        min: 1,
+        max: 1,
         cpuUtilization: 70,
         memoryUtilization: 70,
       },
@@ -42,7 +42,7 @@ ecrResources.clickHouseContainerRepository.repositoryUrl.apply((url) => {
           enableExecuteCommand: true,
           healthCheckGracePeriodSeconds: 180,
           forceNewDeployment: true,
-          desiredCount: 2,
+          desiredCount: 1,
           availabilityZoneRebalancing: "ENABLED",
           launchType: "FARGATE",
           serviceRegistries: {

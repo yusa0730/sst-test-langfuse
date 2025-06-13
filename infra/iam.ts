@@ -100,6 +100,9 @@ const langfuseEcsTaskExecuteRole = new aws.iam.Role(
             "ecr:BatchCheckLayerAvailability",
             "ecr:GetDownloadUrlForLayer",
             "ecr:BatchGetImage",
+            "ssm:GetParameters",
+            "ssm:GetParameter",
+            "kms:Decrypt"
           ],
           resources: ["*"],
           effect: "Allow",

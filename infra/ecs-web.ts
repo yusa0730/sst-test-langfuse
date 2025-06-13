@@ -13,6 +13,26 @@ import { rdsResources } from "./rds";
 
 console.log("======ecs.ts start======");
 
+// const dbUrlParam = await aws.ssm.getParameter(
+//   {
+//     name: `/${infraConfigResources.idPrefix}/langfuse/${$app.stage}/rds/database/url`,
+//   },
+//   {
+//     async: true
+//   }
+// );
+
+// console.log("=======dbUrlParam=======");
+// console.log(dbUrlParam);
+// console.log("=======dbUrlParam=======");
+
+rdsResources.databaseUrlSecret.arn.apply((arn) => {
+  console.log("=======databaseUrlSecretArn=======");
+  console.log(arn);
+  console.log("=======databaseUrlSecretArn=======");
+});
+
+
 ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
   // ECS Service
   ecsClusterResources.ecsCluster.addService(
@@ -72,7 +92,7 @@ ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
             elasticacheResources.elasticache,
             serviceDiscoveryResources.clickhouseService.name,
             serviceDiscoveryResources.langfuseNamespace.name,
-            albResources.alb.dnsName
+            rdsResources.databaseUrlSecret.arn
           ])
           .apply(
             ([
@@ -82,7 +102,7 @@ ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
               elasticache,
               clickhouseServiceName,
               langfuseNamespaceName,
-              albDnsName
+              databaseUrlSecretArn
             ]) =>
               $jsonStringify([
               {
@@ -229,9 +249,13 @@ ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
                   { name: "OTEL_SERVICE_NAME", value: "langfuse"},
                 ],
                 secrets: [
+                  // {
+                  //   name: "DATABASE_URL",
+                  //   valueFrom: $interpolate`${rdsResources.dbUrlSecret.arn}:db_url::`,
+                  // },
                   {
                     name: "DATABASE_URL",
-                    valueFrom: $interpolate`${rdsResources.dbUrlSecret.arn}:db_url::`,
+                    valueFrom: databaseUrlSecretArn,
                   },
                 ],
               },

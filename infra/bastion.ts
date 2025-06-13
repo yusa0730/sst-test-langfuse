@@ -99,8 +99,9 @@ const bastionInstance = new aws.ec2.Instance(
     sudo yum update -y
     sudo dnf install -y postgresql15 nodejs
     sudo yum install -y https://s3.ap-northeast-1.amazonaws.com/amazon-ssm-ap-northeast-1/latest/linux_amd64/amazon-ssm-agent.rpm
-    sudo systemctl start amazon-ssm-agent
-    sudo systemctl enable amazon-ssm-agent
+    sudo dnf remove -y amazon-ssm-agent || true           # もし rpm を上書きした場合
+    sudo dnf install -y amazon-ssm-agent                  # OS リポジトリ版
+    sudo systemctl enable --now amazon-ssm-agent
     export PNPM_VERSION=9.10.0
     curl -fsSL https://get.pnpm.io/install.sh | bash -
     export PNPM_HOME="$HOME/.local/share/pnpm"
