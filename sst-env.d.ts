@@ -5,15 +5,6 @@
 
 declare module "sst" {
   export interface Resource {
-    "sst-test-langfuse-async-worker-ecs-service-production": {
-      "type": "sst.aws.Service"
-    }
-    "sst-test-langfuse-clickhouse-ecs-service-production": {
-      "type": "sst.aws.Service"
-    }
-    "sst-test-langfuse-web-server-ecs-service-production": {
-      "type": "sst.aws.Service"
-    }
   }
 }
 /// <reference path="sst-env.d.ts" />
