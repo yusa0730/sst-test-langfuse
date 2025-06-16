@@ -32,7 +32,6 @@ rdsResources.databaseUrlSecret.arn.apply((arn) => {
   console.log("=======databaseUrlSecretArn=======");
 });
 
-
 ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
   // ECS Service
   ecsClusterResources.ecsCluster.addService(
@@ -92,7 +91,8 @@ ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
             elasticacheResources.elasticache,
             serviceDiscoveryResources.clickhouseService.name,
             serviceDiscoveryResources.langfuseNamespace.name,
-            rdsResources.databaseUrlSecret.arn
+            rdsResources.databaseUrlSecret.arn,
+            infraConfigResources.clickhousePasswordParam.arn
           ])
           .apply(
             ([
@@ -102,7 +102,8 @@ ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
               elasticache,
               clickhouseServiceName,
               langfuseNamespaceName,
-              databaseUrlSecretArn
+              databaseUrlSecretArn,
+              clickhousePasswordParamArn
             ]) =>
               $jsonStringify([
               {
@@ -242,7 +243,7 @@ ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
                   // },
                   {
                     name: "CLICKHOUSE_PASSWORD",
-                    value: infraConfigResources.clickhousePassword
+                    value: "bGgaFo3W8geHd6Sz"
                   },
                   { name: "LANGFUSE_LOG_LEVEL", value: "trace"},
                   { name: "OTEL_EXPORTER_OTLP_ENDPOINT", value: "http://localhost:4318"},
@@ -250,8 +251,8 @@ ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
                 ],
                 secrets: [
                   // {
-                  //   name: "DATABASE_URL",
-                  //   valueFrom: $interpolate`${rdsResources.dbUrlSecret.arn}:db_url::`,
+                  //   name: "CLICKHOUSE_PASSWORD",
+                  //   valueFrom: clickhousePasswordParamArn,
                   // },
                   {
                     name: "DATABASE_URL",

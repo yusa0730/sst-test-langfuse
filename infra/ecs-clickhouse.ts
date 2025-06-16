@@ -91,12 +91,14 @@ ecrResources.clickHouseContainerRepository.repositoryUrl.apply((url) => {
           },
           containerDefinitions: $util.all([
             cloudwatchResources.langfuseClickHouseLog,
-            s3Resources.langfuseClickhouseBucket
+            s3Resources.langfuseClickhouseBucket,
+            infraConfigResources.clickhousePasswordParam.arn
           ])
           .apply(
             ([
               logGroup,
-              bucket
+              bucket,
+              clickhousePasswordParamArn
             ]) =>
               $jsonStringify([
               {
@@ -163,7 +165,7 @@ ecrResources.clickHouseContainerRepository.repositoryUrl.apply((url) => {
                   },
                   {
                     name: "CLICKHOUSE_PASSWORD",
-                    value: infraConfigResources.clickhousePassword
+                    value: "bGgaFo3W8geHd6Sz"
                   },
                   {
                     name: "AWS_REGION",
@@ -174,6 +176,12 @@ ecrResources.clickHouseContainerRepository.repositoryUrl.apply((url) => {
                     value: bucket.id
                   },
                 ],
+                // secrets: [
+                //   {
+                //     name: "CLICKHOUSE_PASSWORD",
+                //     valueFrom: clickhousePasswordParamArn
+                //   },
+                // ],
               },
             ]),
           )

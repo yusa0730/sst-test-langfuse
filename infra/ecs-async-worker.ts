@@ -83,7 +83,8 @@ ecrResources.asyncWorkerContainerRepository.repositoryUrl.apply((url) => {
             elasticacheResources.elasticache,
             serviceDiscoveryResources.clickhouseService.name,
             serviceDiscoveryResources.langfuseNamespace.name,
-            rdsResources.databaseUrlSecret.arn
+            rdsResources.databaseUrlSecret.arn,
+            infraConfigResources.clickhousePasswordParam.arn
           ])
           .apply(
             ([
@@ -93,7 +94,8 @@ ecrResources.asyncWorkerContainerRepository.repositoryUrl.apply((url) => {
               elasticache,
               clickhouseServiceName,
               langfuseNamespaceName,
-              databaseUrlSecretArn
+              databaseUrlSecretArn,
+              clickhousePasswordParamArn
             ]) =>
               $jsonStringify([
               {
@@ -202,7 +204,7 @@ ecrResources.asyncWorkerContainerRepository.repositoryUrl.apply((url) => {
                   },
                   {
                     name: "CLICKHOUSE_PASSWORD",
-                    value: infraConfigResources.clickhousePassword
+                    value: "bGgaFo3W8geHd6Sz"
                   },
                   // {
                   //   name: "DATABASE_URL",
@@ -218,8 +220,8 @@ ecrResources.asyncWorkerContainerRepository.repositoryUrl.apply((url) => {
                 ],
                 secrets: [
                   // {
-                  //   name: "DATABASE_URL",
-                  //   valueFrom: $interpolate`${rdsResources.dbUrlSecret.arn}:db_url::`,
+                  //   name: "CLICKHOUSE_PASSWORD",
+                  //   valueFrom: clickhousePasswordParamArn,
                   // },
                   {
                     name: "DATABASE_URL",

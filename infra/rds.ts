@@ -12,30 +12,30 @@ const masterPassword = new random.RandomPassword(
     length: 20,
     special: false,
   }
-);
+).result;
 
-const masterSecret = new aws.secretsmanager.Secret(
-  `${infraConfigResources.idPrefix}-aurora-master-secret-v2-${$app.stage}`,
-  {
-    name: `${infraConfigResources.idPrefix}-aurora-master-secret-v2-${$app.stage}`,
-    description: `${infraConfigResources.idPrefix}-aurora-master-secret-${$app.stage}`,
-  }
-);
+// const masterSecret = new aws.secretsmanager.Secret(
+//   `${infraConfigResources.idPrefix}-aurora-master-secret-v2-${$app.stage}`,
+//   {
+//     name: `${infraConfigResources.idPrefix}-aurora-master-secret-v2-${$app.stage}`,
+//     description: `${infraConfigResources.idPrefix}-aurora-master-secret-${$app.stage}`,
+//   }
+// );
 
-new aws.secretsmanager.SecretVersion(
-  `${infraConfigResources.idPrefix}-aurora-master-secret-ver-${$app.stage}`,
-  {
-    secretId: masterSecret.id,
-    secretString: $interpolate`{"username":"${masterUsername}","password":"${masterPassword.result}"}`,
-  }
-);
+// new aws.secretsmanager.SecretVersion(
+//   `${infraConfigResources.idPrefix}-aurora-master-secret-ver-${$app.stage}`,
+//   {
+//     secretId: masterSecret.id,
+//     secretString: $interpolate`{"username":"${masterUsername}","password":"${masterPassword.result}"}`,
+//   }
+// );
 
 const databasePassword = new aws.ssm.Parameter(
   `${infraConfigResources.idPrefix}-database-password-${$app.stage}`,
   {
     name: `/${infraConfigResources.idPrefix}/langfuse/${$app.stage}/rds/database/password`,
-    type: aws.ssm.ParameterType.String,
-    value: masterPassword.result,
+    type: "SecureString",
+    value: masterPassword,
   }
 );
 
@@ -79,7 +79,7 @@ const cluster = new aws.rds.Cluster(
     engineVersion: "16.6",
     databaseName: "langfuse",
     masterUsername: masterUsername,
-    masterPassword: masterPassword.result,
+    masterPassword: masterPassword,
     availabilityZones: [
       `${env.awsMainRegion}a`,
       `${env.awsMainRegion}c`,
@@ -237,18 +237,18 @@ new aws.ssm.Parameter(
 );
 
 // SecretArn パラメータストア登録
-new aws.ssm.Parameter(
-  `${infraConfigResources.idPrefix}-secret-arn-${$app.stage}`,
-  {
-    name: `/${infraConfigResources.idPrefix}/langfuse/${$app.stage}/rds/secret/arn`,
-    type: aws.ssm.ParameterType.String,
-    value: masterSecret.arn,
-  }
-);
+// new aws.ssm.Parameter(
+//   `${infraConfigResources.idPrefix}-secret-arn-${$app.stage}`,
+//   {
+//     name: `/${infraConfigResources.idPrefix}/langfuse/${$app.stage}/rds/secret/arn`,
+//     type: aws.ssm.ParameterType.String,
+//     value: masterSecret.arn,
+//   }
+// );
 
 const dbUrl = pulumi.all([
   userName,
-  masterPassword.result,
+  masterPassword,
   writerEndPoint,
   databaseName,
 ]).apply(([user, password, host, db]) => {
@@ -280,7 +280,7 @@ const databaseUrlSecret = new aws.ssm.Parameter(
   `${infraConfigResources.idPrefix}-database-url-${$app.stage}`,
   {
     name: `/${infraConfigResources.idPrefix}/langfuse/${$app.stage}/rds/database/url`,
-    type: aws.ssm.ParameterType.String,
+    type: "SecureString",
     value: dbUrl.apply((url) => url),
   }
 );

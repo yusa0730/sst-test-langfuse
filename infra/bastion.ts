@@ -95,7 +95,7 @@ const bastionInstance = new aws.ec2.Instance(
     vpcSecurityGroupIds: [bastionSecurityGroup.id],
     iamInstanceProfile: bastionInstanceProfile.name,
     userData: `#!/bin/bash
-    cd /home/ec2-user
+    cd /home/ssm-user
     sudo yum update -y
     sudo dnf install -y postgresql15 nodejs
     sudo yum install -y https://s3.ap-northeast-1.amazonaws.com/amazon-ssm-ap-northeast-1/latest/linux_amd64/amazon-ssm-agent.rpm
@@ -116,6 +116,12 @@ const bastionInstance = new aws.ec2.Instance(
     which redis-cli
     redis-cli -v
     set +H
+    sudo curl -o /etc/yum.repos.d/altinity.repo https://builds.altinity.cloud/yum-repo/altinity.repo
+    sudo curl -o /etc/pki/rpm-gpg/RPM-GPG-KEY-altinity https://builds.altinity.cloud/yum-repo/RPM-GPG-KEY-altinity
+    sudo rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-altinity
+    sudo dnf clean all
+    sudo dnf install -y clickhouse-client
+    clickhouse-client --version
     `,
     tags: {
       Name: `${infraConfigResources.idPrefix}-bastion-${$app.stage}`,

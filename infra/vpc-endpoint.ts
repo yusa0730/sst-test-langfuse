@@ -98,3 +98,19 @@ const parameterStoreInterface = new aws.ec2.VpcEndpoint(
       Name: `${infraConfigResources.idPrefix}-vpc-endpoint-parameter-store-interface-${$app.stage}`,
     },
 });
+
+const ssmMessagesInterface = new aws.ec2.VpcEndpoint(
+  `${infraConfigResources.idPrefix}-vpc-endpoint-ssm-messages-interface-${$app.stage}`,
+  {
+    vpcId: vpcResources.vpc.id,
+    serviceName: `com.amazonaws.${infraConfigResources.mainRegion}.ssmmessages`,
+    privateDnsEnabled: true,
+    securityGroupIds: [
+      securityGroupResources.vpcEndpointSecurityGroup.id
+    ],
+    subnetIds: vpcResources.vpcEndpointProtectedSubnets.map(subnet => subnet.id),
+    vpcEndpointType: "Interface",
+    tags: {
+      Name: `${infraConfigResources.idPrefix}-vpc-endpoint-ssm-messages-${$app.stage}`,
+    },
+});

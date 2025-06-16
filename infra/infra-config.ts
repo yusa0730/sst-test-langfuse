@@ -29,26 +29,35 @@ const clickhousePassword = new random.RandomPassword(
   `${idPrefix}-clickhouse-password-${$app.stage}`,
   {
     length: 16,
-    special: true,
-    overrideSpecial: "_!%^"
+    special: false,
+    // overrideSpecial: "_!%^"
   }
 ).result;
 
-// Store password in Secrets Manager
-const clickhousePasswordSecret = new aws.secretsmanager.Secret(
-  `${idPrefix}-clickhouse-password-secret-${$app.stage}`,
+const clickhousePasswordParam = new aws.ssm.Parameter(
+  `${idPrefix}-clickhouse-password-param-${$app.stage}`,
   {
-    namePrefix: `clickhouse_password_${$app.stage}`
+    name: `/${idPrefix}/langfuse/${$app.stage}/clickhouse/password`,
+    type: "SecureString",
+    value: clickhousePassword,
   }
 );
 
-const clickhousePasswordSecretVersion = new aws.secretsmanager.SecretVersion(
-  `${idPrefix}-clickhouse-password-secret-version-${$app.stage}`,
-  {
-    secretId: clickhousePasswordSecret.id,
-    secretString: clickhousePassword
-  }
-);
+// // Store password in Secrets Manager
+// const clickhousePasswordSecret = new aws.secretsmanager.Secret(
+//   `${idPrefix}-clickhouse-password-secret-${$app.stage}`,
+//   {
+//     namePrefix: `clickhouse_password_${$app.stage}`
+//   }
+// );
+
+// const clickhousePasswordSecretVersion = new aws.secretsmanager.SecretVersion(
+//   `${idPrefix}-clickhouse-password-secret-version-${$app.stage}`,
+//   {
+//     secretId: clickhousePasswordSecret.id,
+//     secretString: clickhousePassword
+//   }
+// );
 
 // ランダム生成：base64（openssl rand -base64 32 相当）
 const webSalt = new random.RandomPassword(
@@ -104,5 +113,6 @@ export const infraConfigResources = {
   webSalt,
   encryptionKey,
   webNextSecret,
-  redisPasswordValue
+  redisPasswordValue,
+  clickhousePasswordParam
 };
