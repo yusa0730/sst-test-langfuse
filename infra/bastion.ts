@@ -95,12 +95,13 @@ const bastionInstance = new aws.ec2.Instance(
     vpcSecurityGroupIds: [bastionSecurityGroup.id],
     iamInstanceProfile: bastionInstanceProfile.name,
     userData: `#!/bin/bash
-    cd /home/ec2-user
+    cd /home/ssm-user
     sudo yum update -y
     sudo dnf install -y postgresql15 nodejs
     sudo yum install -y https://s3.ap-northeast-1.amazonaws.com/amazon-ssm-ap-northeast-1/latest/linux_amd64/amazon-ssm-agent.rpm
-    sudo systemctl start amazon-ssm-agent
-    sudo systemctl enable amazon-ssm-agent
+    sudo dnf remove -y amazon-ssm-agent || true           # もし rpm を上書きした場合
+    sudo dnf install -y amazon-ssm-agent                  # OS リポジトリ版
+    sudo systemctl enable --now amazon-ssm-agent
     export PNPM_VERSION=9.10.0
     curl -fsSL https://get.pnpm.io/install.sh | bash -
     export PNPM_HOME="$HOME/.local/share/pnpm"
@@ -115,6 +116,12 @@ const bastionInstance = new aws.ec2.Instance(
     which redis-cli
     redis-cli -v
     set +H
+    sudo curl -o /etc/yum.repos.d/altinity.repo https://builds.altinity.cloud/yum-repo/altinity.repo
+    sudo curl -o /etc/pki/rpm-gpg/RPM-GPG-KEY-altinity https://builds.altinity.cloud/yum-repo/RPM-GPG-KEY-altinity
+    sudo rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-altinity
+    sudo dnf clean all
+    sudo dnf install -y clickhouse-client
+    clickhouse-client --version
     `,
     tags: {
       Name: `${infraConfigResources.idPrefix}-bastion-${$app.stage}`,
