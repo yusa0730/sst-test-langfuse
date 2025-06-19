@@ -90,14 +90,14 @@ ecrResources.clickHouseContainerRepository.repositoryUrl.apply((url) => {
             cpuArchitecture: "ARM64"
           },
           containerDefinitions: $util.all([
-            cloudwatchResources.langfuseClickHouseLog,
-            s3Resources.langfuseClickhouseBucket,
+            cloudwatchResources.langfuseClickHouseLog.id,
+            s3Resources.langfuseClickhouseBucket.id,
             infraConfigResources.clickhousePasswordParam.arn
           ])
           .apply(
             ([
-              logGroup,
-              bucket,
+              logGroupId,
+              bucketId,
               clickhousePasswordParamArn
             ]) =>
               $jsonStringify([
@@ -150,7 +150,7 @@ ecrResources.clickHouseContainerRepository.repositoryUrl.apply((url) => {
                   logDriver: "awslogs",
                   options: {
                     "awslogs-region": infraConfigResources.mainRegion,
-                    "awslogs-group": logGroup.id,
+                    "awslogs-group": logGroupId,
                     "awslogs-stream-prefix": "clickhouse",
                   },
                 },
@@ -164,24 +164,20 @@ ecrResources.clickHouseContainerRepository.repositoryUrl.apply((url) => {
                     value: "clickhouse"
                   },
                   {
-                    name: "CLICKHOUSE_PASSWORD",
-                    value: "bGgaFo3W8geHd6Sz"
-                  },
-                  {
                     name: "AWS_REGION",
                     value: infraConfigResources.mainRegion
                   },
                   {
                     name: "S3_BUCKET",
-                    value: bucket.id
+                    value: bucketId
                   },
                 ],
-                // secrets: [
-                //   {
-                //     name: "CLICKHOUSE_PASSWORD",
-                //     valueFrom: clickhousePasswordParamArn
-                //   },
-                // ],
+                secrets: [
+                  {
+                    name: "CLICKHOUSE_PASSWORD",
+                    valueFrom: clickhousePasswordParamArn
+                  },
+                ],
               },
             ]),
           )

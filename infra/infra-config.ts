@@ -26,11 +26,10 @@ console.log("====awsAccountId====", awsAccountId);
 
 // Generate random password for ClickHouse
 const clickhousePassword = new random.RandomPassword(
-  `${idPrefix}-clickhouse-password-${$app.stage}`,
+  `${idPrefix}-clickhouse-password-v1-${$app.stage}`,
   {
     length: 16,
     special: false,
-    // overrideSpecial: "_!%^"
   }
 ).result;
 
@@ -40,58 +39,92 @@ const clickhousePasswordParam = new aws.ssm.Parameter(
     name: `/${idPrefix}/langfuse/${$app.stage}/clickhouse/password`,
     type: "SecureString",
     value: clickhousePassword,
+    overwrite : true,
   }
 );
 
-// // Store password in Secrets Manager
-// const clickhousePasswordSecret = new aws.secretsmanager.Secret(
-//   `${idPrefix}-clickhouse-password-secret-${$app.stage}`,
-//   {
-//     namePrefix: `clickhouse_password_${$app.stage}`
-//   }
-// );
-
-// const clickhousePasswordSecretVersion = new aws.secretsmanager.SecretVersion(
-//   `${idPrefix}-clickhouse-password-secret-version-${$app.stage}`,
-//   {
-//     secretId: clickhousePasswordSecret.id,
-//     secretString: clickhousePassword
-//   }
-// );
-
 // ランダム生成：base64（openssl rand -base64 32 相当）
-const webSalt = new random.RandomPassword(
-  `${idPrefix}-web-salt-${$app.stage}`,
+const webSaltBytes = new random.RandomBytes(
+  `${idPrefix}-web-salt-v1-${$app.stage}`,
   {
     length: 32,
-    overrideSpecial: "_!%^",
-    special: true,
   }
-).result;
+);
 
-// ランダム生成：256-bit HEX (openssl rand -hex 32 相当)
-const encryptionKey = new random.RandomString(
-  `${idPrefix}-encryption-key-${$app.stage}`,
+// 2) base64 文字列 (44 文字, パディング '=' 1 個付き) を取得
+const webSalt = webSaltBytes.base64;
+
+webSalt.apply((salt) => {
+  console.log("======webSalt======");
+  console.log(salt);
+  console.log("======webSalt======");
+});
+
+const webSaltParam = new aws.ssm.Parameter(
+  `${idPrefix}-web-salt-param-${$app.stage}`,
   {
-    length: 64,
-    upper: false,
-    special: false,
-    number: true,
+    name: `/${idPrefix}/langfuse/${$app.stage}/web/salt`,
+    type: "SecureString",
+    value: webSalt,
+    overwrite : true,
   }
-).result;
+);
 
-// ランダムなBase64形式のシークレットを生成
-const webNextSecret = new random.RandomPassword(
-  `${idPrefix}-web-next-secret-${$app.stage}`,
+// openssl rand -hex 32
+const encryptionKeyBytes = new random.RandomBytes(
+  `${idPrefix}-encryption-key-v1-${$app.stage}`,
+  {
+    length: 32
+  }
+);
+
+const encryptionKey = encryptionKeyBytes.hex;
+
+encryptionKey.apply((hex) => {
+  console.log("======encryptionKeyHex======");
+  console.log(hex);
+  console.log("======encryptionKeyHex======");
+})
+
+const encryptionKeyParam = new aws.ssm.Parameter(
+  `${idPrefix}-encryption-key-param-${$app.stage}`,
+  {
+    name: `/${idPrefix}/langfuse/${$app.stage}/web/encryption`,
+    type: "SecureString",
+    value: encryptionKey,
+    overwrite : true,
+  }
+);
+
+// 1) 32 byte の乱数を生成
+const webNextSecretBytes = new random.RandomBytes(
+  `${idPrefix}-web-next-secret-bytes-${$app.stage}`,
   {
     length: 32,
-    overrideSpecial: "_%@",
-    special: true,
   }
-).result;
+);
+
+// 2) base64 文字列 (44 文字, パディング '=' 1 個付き) を取得
+const webNextSecret = webNextSecretBytes.base64;
+
+webNextSecret.apply((secret) => {
+  console.log("======webNextSecret======");
+  console.log(secret);
+  console.log("======webNextSecret======");
+});
+
+const webNextSecretParam = new aws.ssm.Parameter(
+  `${idPrefix}-web-next-secret-param-${$app.stage}`,
+  {
+    name: `/${idPrefix}/langfuse/${$app.stage}/web/next/secret`,
+    type: "SecureString",
+    value: webNextSecret,
+    overwrite : true,
+  }
+);
 
 const redisPasswordValue = new random.RandomPassword(
-  `${idPrefix}-redis-auth-token-value-${$app.stage}`,
+  `${idPrefix}-redis-auth-token-value-v1-${$app.stage}`,
   {
     length: 44,
     special: true,
@@ -114,5 +147,8 @@ export const infraConfigResources = {
   encryptionKey,
   webNextSecret,
   redisPasswordValue,
-  clickhousePasswordParam
+  clickhousePasswordParam,
+  webSaltParam,
+  encryptionKeyParam,
+  webNextSecretParam
 };

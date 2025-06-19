@@ -26,14 +26,6 @@ const albSecurityGroup = new aws.ec2.SecurityGroup(
         prefixListIds: [cloudfrontPrefixListId],
         description: "Allow HTTPS from CloudFront",
       },
-      {
-        // テスト用
-        fromPort: 80,
-        toPort: 80,
-        protocol: "tcp",
-        description: "Allow HTTP from network",
-        cidrBlocks: ["0.0.0.0/0"],
-      }
     ],
     egress: [{
       fromPort: 0,

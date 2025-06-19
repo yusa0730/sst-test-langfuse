@@ -7,28 +7,12 @@ import { env } from "./env";
 
 const masterUsername = "langfuse";
 const masterPassword = new random.RandomPassword(
-  `${infraConfigResources.idPrefix}-aurora-master-password-${$app.stage}`,
+  `${infraConfigResources.idPrefix}-aurora-master-password-v1-${$app.stage}`,
   {
     length: 20,
     special: false,
   }
 ).result;
-
-// const masterSecret = new aws.secretsmanager.Secret(
-//   `${infraConfigResources.idPrefix}-aurora-master-secret-v2-${$app.stage}`,
-//   {
-//     name: `${infraConfigResources.idPrefix}-aurora-master-secret-v2-${$app.stage}`,
-//     description: `${infraConfigResources.idPrefix}-aurora-master-secret-${$app.stage}`,
-//   }
-// );
-
-// new aws.secretsmanager.SecretVersion(
-//   `${infraConfigResources.idPrefix}-aurora-master-secret-ver-${$app.stage}`,
-//   {
-//     secretId: masterSecret.id,
-//     secretString: $interpolate`{"username":"${masterUsername}","password":"${masterPassword.result}"}`,
-//   }
-// );
 
 const databasePassword = new aws.ssm.Parameter(
   `${infraConfigResources.idPrefix}-database-password-${$app.stage}`,
@@ -36,6 +20,7 @@ const databasePassword = new aws.ssm.Parameter(
     name: `/${infraConfigResources.idPrefix}/langfuse/${$app.stage}/rds/database/password`,
     type: "SecureString",
     value: masterPassword,
+    overwrite : true,
   }
 );
 
@@ -150,62 +135,6 @@ const readReplica1c = new aws.rds.ClusterInstance(
   }
 );
 
-
-// // Aurora Serverless作成
-// const auroraServerless = new sst.aws.Postgres.v1(
-//   `${infraConfigResources.idPrefix}-aurora-serverless-${$app.stage}`,
-//   {
-//     vpc: {
-//       privateSubnets: rdsVpcResources.rdsVpcPrivateSubnets.map((subnet) => subnet.id),
-//       securityGroups: [securityGroupResources.auroraServerlessSecurityGroup.id],
-//     },
-//     transform: {
-//       cluster: {
-//         databaseName: "langfuse",
-//         masterUsername: "langfuse",
-//         enabledCloudwatchLogsExports: ["postgresql"],
-//          // storage_encrypted: true,
-//         // TODO: Databae Insights Advansedの使用を検討する
-//         performanceInsightsEnabled: true,
-//         performanceInsightsRetentionPeriod:
-//           env.bffRdsPerformanceInsightsRetentionInDays,
-//         tags: {
-//           Name: `${infraConfigResources.idPrefix}-aurora-serverless-cluster-${$app.stage}`,
-//         },
-//       },
-//       instance: {
-//         availabilityZone: `${env.awsMainRegion}a`,
-//         tags: {
-//           Name: `${infraConfigResources.idPrefix}-aurora-serverless-instance-${$app.stage}`,
-//         },
-//       },
-//     },
-//   }
-// );
-
-// // リードレプリカ作成
-// new aws.rds.ClusterInstance(
-//   `${infraConfigResources.idPrefix}-instance-read-replica-${$app.stage}`,
-//   {
-//     clusterIdentifier: auroraServerless.clusterID,
-//     instanceClass: "db.serverless",
-//     engine: "aurora-postgresql",
-//     promotionTier: 1,
-//     availabilityZone: `${env.awsMainRegion}c`,
-//     identifier:`${infraConfigResources.idPrefix}-instance-read-replica-${$app.stage}`,
-//     tags: {
-//       Name: `${infraConfigResources.idPrefix}-instance-read-replica-${$app.stage}`,
-//     },
-//   }
-// );
-
-// cluster取得
-// const cluster = auroraServerless.clusterID.apply((clusterID) =>
-//   aws.rds.getCluster({
-//     clusterIdentifier: clusterID,
-//   }),
-// );
-
 // writerEndPoint取得
 const writerEndPoint = cluster.endpoint;
 
@@ -236,16 +165,6 @@ new aws.ssm.Parameter(
   }
 );
 
-// SecretArn パラメータストア登録
-// new aws.ssm.Parameter(
-//   `${infraConfigResources.idPrefix}-secret-arn-${$app.stage}`,
-//   {
-//     name: `/${infraConfigResources.idPrefix}/langfuse/${$app.stage}/rds/secret/arn`,
-//     type: aws.ssm.ParameterType.String,
-//     value: masterSecret.arn,
-//   }
-// );
-
 const dbUrl = pulumi.all([
   userName,
   masterPassword,
@@ -261,27 +180,13 @@ console.log(url)
 console.log("===url====")
 })
 
-// const dbUrlSecret = new aws.secretsmanager.Secret(
-//   `${infraConfigResources.idPrefix}-database-url-v12-${$app.stage}`,
-//   {
-//     name: `${infraConfigResources.idPrefix}-database-url-v12-${$app.stage}`,
-//   }
-// );
-
-// const databaseUrlSecretVersion = new aws.secretsmanager.SecretVersion(
-//   `${infraConfigResources.idPrefix}-database-url-secret-${$app.stage}`,
-//   {
-//     secretId: dbUrlSecret.id,
-//     secretString: dbUrl.apply((url) => JSON.stringify({ db_url: url })),
-//   }
-// );
-
 const databaseUrlSecret = new aws.ssm.Parameter(
   `${infraConfigResources.idPrefix}-database-url-${$app.stage}`,
   {
     name: `/${infraConfigResources.idPrefix}/langfuse/${$app.stage}/rds/database/url`,
     type: "SecureString",
     value: dbUrl.apply((url) => url),
+    overwrite : true,
   }
 );
 
@@ -290,8 +195,6 @@ export const rdsResources = {
   cluster,
   writerEndPoint,
   readerEndPoint,
-  // dbUrlSecret,
   dbUrl,
-  // databaseUrlSecretVersion,
   databaseUrlSecret
 };

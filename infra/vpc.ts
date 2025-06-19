@@ -87,51 +87,6 @@ new aws.ec2.RouteTableAssociation(
   }
 );
 
-// // eip&Nat Gateway
-// const eip1a = new aws.ec2.Eip(
-//   `${infraConfigResources.idPrefix}-eip-1a-${$app.stage}`,
-//   {
-//     domain: "vpc",
-//     tags: {
-//       Name: `${infraConfigResources.idPrefix}-eip-1a-${$app.stage}`,
-//     }
-//   }
-// );
-
-// const natGateway1a = new aws.ec2.NatGateway(
-//   `${infraConfigResources.idPrefix}-ngw-1a-${$app.stage}`,
-//   {
-//     allocationId: eip1a.id,
-//     subnetId: publicSubnet1a.id,
-//     tags: {
-//       Name: `${infraConfigResources.idPrefix}-ngw-1a-${$app.stage}`,
-//     },
-//   },
-// );
-
-// if ($app.stage !== "production") {
-//   const eip1c = new aws.ec2.Eip(
-//     `${infraConfigResources.idPrefix}-eip-1c-${$app.stage}`,
-//     {
-//       domain: "vpc",
-//       tags: {
-//         Name: `${infraConfigResources.idPrefix}-eip-1c-${$app.stage}`,
-//       }
-//     }
-//   );
-
-//   const natGateway1c = new aws.ec2.NatGateway(
-//     `${infraConfigResources.idPrefix}-ngw-1c-${$app.stage}`,
-//     {
-//       allocationId: eip1c.id,
-//       subnetId: publicSubnet1c.id,
-//       tags: {
-//         Name: `${infraConfigResources.idPrefix}-ngw-1c-${$app.stage}`,
-//       }
-//     }
-//   );
-// }
-
 const protectedRouteTable1a = new aws.ec2.RouteTable(
   `${infraConfigResources.idPrefix}-protected-rtb-1a-${$app.stage}`,
   {
@@ -153,16 +108,6 @@ const protectedRouteTable1c = new aws.ec2.RouteTable(
   }
 );
 protectedRouteTables.push(protectedRouteTable1c);
-
-// // 本番用
-// new aws.ec2.Route(
-//   `${infraConfigResources.idPrefix}-protected-default-route-1a-${$app.stage}`,
-//   {
-//     routeTableId: protectedRouteTable1c.id,
-//     gatewayId: natGateway1c.id,
-//     destinationCidrBlock: "0.0.0.0/0"
-//   }
-// )
 
 // =======alb network========
 const albProtectedSubnet1a = new aws.ec2.Subnet(
@@ -448,96 +393,96 @@ new aws.ec2.RouteTableAssociation(
   }
 );
 
-// // DNS Firewall ログの作成
-// const dnsFirewallLogGroup = new aws.cloudwatch.LogGroup(
-//   `${infraConfigResources.idPrefix}-dns-firewall-log-group-${$app.stage}`,
-//   {
-//     name: `/dnsfirewall/${infraConfigResources.idPrefix}-dns-firewall-log-${$app.stage}`,
-//     retentionInDays: env.bffDnsFirewallLogRetentionInDays,
-//   },
-// );
+// DNS Firewall ログの作成
+const dnsFirewallLogGroup = new aws.cloudwatch.LogGroup(
+  `${infraConfigResources.idPrefix}-dns-firewall-log-group-${$app.stage}`,
+  {
+    name: `/dnsfirewall/${infraConfigResources.idPrefix}-dns-firewall-log-${$app.stage}`,
+    retentionInDays: env.bffDnsFirewallLogRetentionInDays,
+  },
+);
 
-// // Route 53 Resolver Query Logの設定
-// const queryLogConfig = new aws.route53.ResolverQueryLogConfig(
-//   `${infraConfigResources.idPrefix}-query-log-config-${$app.stage}`,
-//   {
-//     destinationArn: dnsFirewallLogGroup.arn,
-//     name: `${infraConfigResources.idPrefix}-dns-firewall-query-log-config-${$app.stage}`,
-//   },
-// );
+// Route 53 Resolver Query Logの設定
+const queryLogConfig = new aws.route53.ResolverQueryLogConfig(
+  `${infraConfigResources.idPrefix}-query-log-config-${$app.stage}`,
+  {
+    destinationArn: dnsFirewallLogGroup.arn,
+    name: `${infraConfigResources.idPrefix}-dns-firewall-query-log-config-${$app.stage}`,
+  },
+);
 
-// // ルールグループ
-// const dnsFirewallRuleGroup = new aws.route53.ResolverFirewallRuleGroup(
-//   `${infraConfigResources.idPrefix}-rule-group-${$app.stage}`,
-//   {
-//     name: `${infraConfigResources.idPrefix}-dns-firewall-rule-group-${$app.stage}`,
-//   },
-// );
+// ルールグループ
+const dnsFirewallRuleGroup = new aws.route53.ResolverFirewallRuleGroup(
+  `${infraConfigResources.idPrefix}-rule-group-${$app.stage}`,
+  {
+    name: `${infraConfigResources.idPrefix}-dns-firewall-rule-group-${$app.stage}`,
+  },
+);
 
-// // ルール
-// new aws.route53.ResolverFirewallRule(
-//   `${infraConfigResources.idPrefix}-dns-firewall-rule-101-${$app.stage}`,
-//   {
-//     name: "AWSManagedDomainsAggregateThreatList",
-//     action: "BLOCK",
-//     blockResponse: "NODATA",
-//     firewallDomainListId: "rslvr-fdl-103b4302c274455e",
-//     firewallRuleGroupId: dnsFirewallRuleGroup.id,
-//     priority: 101,
-//   },
-// );
-// new aws.route53.ResolverFirewallRule(
-//   `${infraConfigResources.idPrefix}-dns-firewall-rule-102-${$app.stage}`,
-//   {
-//     name: "AWSManagedDomainsAmazonGuardDutyThreatList",
-//     action: "BLOCK",
-//     blockResponse: "NODATA",
-//     firewallDomainListId: "rslvr-fdl-3ba9acb851c04c45",
-//     firewallRuleGroupId: dnsFirewallRuleGroup.id,
-//     priority: 102,
-//   },
-// );
-// new aws.route53.ResolverFirewallRule(
-//   `${infraConfigResources.idPrefix}-dns-firewall-rule-103-${$app.stage}`,
-//   {
-//     name: "AWSManagedDomainsBotnetCommandandControl",
-//     action: "BLOCK",
-//     blockResponse: "NODATA",
-//     firewallDomainListId: "rslvr-fdl-1a63d8549cca46e6",
-//     firewallRuleGroupId: dnsFirewallRuleGroup.id,
-//     priority: 103,
-//   },
-// );
-// new aws.route53.ResolverFirewallRule(
-//   `${infraConfigResources.idPrefix}-dns-firewall-rule-104-${$app.stage}`,
-//   {
-//     name: "AWSManagedDomainsMalwareDomainList",
-//     action: "BLOCK",
-//     blockResponse: "NODATA",
-//     firewallDomainListId: "rslvr-fdl-dc19e97bef3c454a",
-//     firewallRuleGroupId: dnsFirewallRuleGroup.id,
-//     priority: 104,
-//   },
-// );
+// ルール
+new aws.route53.ResolverFirewallRule(
+  `${infraConfigResources.idPrefix}-dns-firewall-rule-101-${$app.stage}`,
+  {
+    name: "AWSManagedDomainsAggregateThreatList",
+    action: "BLOCK",
+    blockResponse: "NODATA",
+    firewallDomainListId: "rslvr-fdl-103b4302c274455e",
+    firewallRuleGroupId: dnsFirewallRuleGroup.id,
+    priority: 101,
+  },
+);
+new aws.route53.ResolverFirewallRule(
+  `${infraConfigResources.idPrefix}-dns-firewall-rule-102-${$app.stage}`,
+  {
+    name: "AWSManagedDomainsAmazonGuardDutyThreatList",
+    action: "BLOCK",
+    blockResponse: "NODATA",
+    firewallDomainListId: "rslvr-fdl-3ba9acb851c04c45",
+    firewallRuleGroupId: dnsFirewallRuleGroup.id,
+    priority: 102,
+  },
+);
+new aws.route53.ResolverFirewallRule(
+  `${infraConfigResources.idPrefix}-dns-firewall-rule-103-${$app.stage}`,
+  {
+    name: "AWSManagedDomainsBotnetCommandandControl",
+    action: "BLOCK",
+    blockResponse: "NODATA",
+    firewallDomainListId: "rslvr-fdl-1a63d8549cca46e6",
+    firewallRuleGroupId: dnsFirewallRuleGroup.id,
+    priority: 103,
+  },
+);
+new aws.route53.ResolverFirewallRule(
+  `${infraConfigResources.idPrefix}-dns-firewall-rule-104-${$app.stage}`,
+  {
+    name: "AWSManagedDomainsMalwareDomainList",
+    action: "BLOCK",
+    blockResponse: "NODATA",
+    firewallDomainListId: "rslvr-fdl-dc19e97bef3c454a",
+    firewallRuleGroupId: dnsFirewallRuleGroup.id,
+    priority: 104,
+  },
+);
 
-// // ルールグループとVPCの関連付け
-// new aws.route53.ResolverFirewallRuleGroupAssociation(
-//   `${infraConfigResources.idPrefix}-rulegroup-association-${$app.stage}`,
-//   {
-//     firewallRuleGroupId: dnsFirewallRuleGroup.id,
-//     vpcId: vpc.id,
-//     priority: 101,
-//   },
-// );
+// ルールグループとVPCの関連付け
+new aws.route53.ResolverFirewallRuleGroupAssociation(
+  `${infraConfigResources.idPrefix}-rulegroup-association-${$app.stage}`,
+  {
+    firewallRuleGroupId: dnsFirewallRuleGroup.id,
+    vpcId: vpc.id,
+    priority: 101,
+  },
+);
 
-// // Route 53 ResolverログをVPCに関連付ける
-// new aws.route53.ResolverQueryLogConfigAssociation(
-//   `${infraConfigResources.idPrefix}-query-logging-config-association-${$app.stage}`,
-//   {
-//     resolverQueryLogConfigId: queryLogConfig.id,
-//     resourceId: vpc.id,
-//   },
-// );
+// Route 53 ResolverログをVPCに関連付ける
+new aws.route53.ResolverQueryLogConfigAssociation(
+  `${infraConfigResources.idPrefix}-query-logging-config-association-${$app.stage}`,
+  {
+    resolverQueryLogConfigId: queryLogConfig.id,
+    resourceId: vpc.id,
+  },
+);
 
 export const vpcResources = {
   vpc,

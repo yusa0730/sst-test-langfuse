@@ -12,7 +12,6 @@ const alb = new aws.lb.LoadBalancer(
     name: `${infraConfigResources.idPrefix}-alb-${$app.stage}`,
     loadBalancerType: "application",
     internal: true,
-    // internal: false,
     subnets: vpcResources.albProtectedSubnets.map((subnet) => subnet.id),
     securityGroups: [securityGroupResources.albSecurityGroup.id],
     accessLogs: {
@@ -122,78 +121,3 @@ export const albResources = {
   httpsListener,
   targetGroup
 };
-
-// // =========ALB インターネットフェイシング用==========
-// import { infraConfigResources } from "./infra-config";
-// import { vpcResources } from "./vpc";
-// import { securityGroupResources } from "./security-group";
-// import { s3Resources } from "./s3";
-
-// console.log("======alb.ts start======");
-
-// const alb = new aws.lb.LoadBalancer(
-//   `${infraConfigResources.idPrefix}-alb-${$app.stage}`,
-//   {
-//     name: `${infraConfigResources.idPrefix}-alb-${$app.stage}`,
-//     loadBalancerType: "application",
-//     internal: false,
-//     subnets: vpcResources.publicSubnets.map((subnet) => subnet.id),
-//     securityGroups: [securityGroupResources.albSecurityGroup.id],
-//     accessLogs: {
-//       bucket: s3Resources.albAccessLogBucket.id,
-//       enabled: true,
-//     },
-//     connectionLogs: {
-//       bucket: s3Resources.albConnectionLogBucket.id,
-//       enabled: true,
-//     },
-//     tags: {
-//       Name: `${infraConfigResources.idPrefix}-alb-${$app.stage}`,
-//     },
-//   },
-// );
-
-// const targetGroup = new aws.lb.TargetGroup(
-//   `${infraConfigResources.idPrefix}-${$app.stage}`,
-//   {
-//     name: `${infraConfigResources.idPrefix}-tg-${$app.stage}`,
-//     targetType: "ip",
-//     port: 3000,
-//     protocol: "HTTP",
-//     vpcId: vpcResources.vpc.id,
-//     healthCheck: {
-//       enabled: true,
-//       path: "/",
-//       port: "traffic-port",
-//       protocol: "HTTP",
-//       healthyThreshold: 5,
-//       unhealthyThreshold: 2,
-//       interval: 30,
-//       timeout: 5,
-//       matcher: "200",
-//     },
-//     tags: {
-//       Name: `${infraConfigResources.idPrefix}-tg-${$app.stage}`,
-//     }
-//   }
-// );
-// const httpListener = new aws.lb.Listener(
-//   `${infraConfigResources.idPrefix}-http-listener-${$app.stage}`,
-//   {
-//     loadBalancerArn: alb.arn,
-//     port: 80,
-//     protocol: "HTTP",
-//     defaultActions: [
-//       {
-//         type: "forward",
-//         targetGroupArn: targetGroup.arn,
-//       },
-//     ],
-//   },
-// );
-
-// export const albResources = {
-//   alb,
-//   httpListener,
-//   targetGroup
-// };
