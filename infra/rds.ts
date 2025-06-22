@@ -68,7 +68,6 @@ const cluster = new aws.rds.Cluster(
     availabilityZones: [
       `${env.awsMainRegion}a`,
       `${env.awsMainRegion}c`,
-      // `${env.awsMainRegion}d`,
     ],
     dbClusterParameterGroupName: clusterParameterGroup.name,
     dbSubnetGroupName: subnetGroup.name,
@@ -95,6 +94,9 @@ const cluster = new aws.rds.Cluster(
     tags: {
       Name: `${infraConfigResources.idPrefix}-aurora-serverless-cluster-${$app.stage}`,
     },
+  },
+  {
+    ignoreChanges: ["availabilityZones"] // sst refresh後にsst deployをするとavailabilityZonesの差分が必ず出てくるので設定
   }
 );
 

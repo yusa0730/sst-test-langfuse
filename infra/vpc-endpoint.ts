@@ -35,11 +35,11 @@ const cloudwatchLogsInterface = new aws.ec2.VpcEndpoint(
     },
 });
 
-const ecrApiInterface = new aws.ec2.VpcEndpoint(
-  `${infraConfigResources.idPrefix}-vpc-endpoint-ecr-api-interface-${$app.stage}`,
+const cloudwatchMetricsInterface = new aws.ec2.VpcEndpoint(
+  `${infraConfigResources.idPrefix}-vpc-endpoint-cloudwatch-metrics-interface-${$app.stage}`,
   {
     vpcId: vpcResources.vpc.id,
-    serviceName: `com.amazonaws.${infraConfigResources.mainRegion}.ecr.api`,
+    serviceName: `com.amazonaws.${infraConfigResources.mainRegion}.monitoring`,
     privateDnsEnabled: true,
     securityGroupIds: [
       securityGroupResources.vpcEndpointSecurityGroup.id
@@ -47,54 +47,6 @@ const ecrApiInterface = new aws.ec2.VpcEndpoint(
     subnetIds: vpcResources.vpcEndpointProtectedSubnets.map(subnet => subnet.id),
     vpcEndpointType: "Interface",
     tags: {
-      Name: `${infraConfigResources.idPrefix}-vpc-endpoint-ecr-api-interface-${$app.stage}`,
-    },
-});
-
-const ecrDkrInterface = new aws.ec2.VpcEndpoint(
-  `${infraConfigResources.idPrefix}-vpc-endpoint-ecr-dkr-interface-${$app.stage}`,
-  {
-    vpcId: vpcResources.vpc.id,
-    serviceName: `com.amazonaws.${infraConfigResources.mainRegion}.ecr.dkr`,
-    privateDnsEnabled: true,
-    securityGroupIds: [
-      securityGroupResources.vpcEndpointSecurityGroup.id
-    ],
-    subnetIds: vpcResources.vpcEndpointProtectedSubnets.map(subnet => subnet.id),
-    vpcEndpointType: "Interface",
-    tags: {
-      Name: `${infraConfigResources.idPrefix}-vpc-endpoint-ecr-dkr-interface-${$app.stage}`,
-    },
-});
-
-const parameterStoreInterface = new aws.ec2.VpcEndpoint(
-  `${infraConfigResources.idPrefix}-vpc-endpoint-parameter-store-interface-${$app.stage}`,
-  {
-    vpcId: vpcResources.vpc.id,
-    serviceName: `com.amazonaws.${infraConfigResources.mainRegion}.ssm`,
-    privateDnsEnabled: true,
-    securityGroupIds: [
-      securityGroupResources.vpcEndpointSecurityGroup.id
-    ],
-    subnetIds: vpcResources.vpcEndpointProtectedSubnets.map(subnet => subnet.id),
-    vpcEndpointType: "Interface",
-    tags: {
-      Name: `${infraConfigResources.idPrefix}-vpc-endpoint-parameter-store-interface-${$app.stage}`,
-    },
-});
-
-const ssmMessagesInterface = new aws.ec2.VpcEndpoint(
-  `${infraConfigResources.idPrefix}-vpc-endpoint-ssm-messages-interface-${$app.stage}`,
-  {
-    vpcId: vpcResources.vpc.id,
-    serviceName: `com.amazonaws.${infraConfigResources.mainRegion}.ssmmessages`,
-    privateDnsEnabled: true,
-    securityGroupIds: [
-      securityGroupResources.vpcEndpointSecurityGroup.id
-    ],
-    subnetIds: vpcResources.vpcEndpointProtectedSubnets.map(subnet => subnet.id),
-    vpcEndpointType: "Interface",
-    tags: {
-      Name: `${infraConfigResources.idPrefix}-vpc-endpoint-ssm-messages-${$app.stage}`,
+      Name: `${infraConfigResources.idPrefix}-vpc-endpoint-cloudwatch-metrics-interface-${$app.stage}`,
     },
 });

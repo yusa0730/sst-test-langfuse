@@ -236,21 +236,17 @@ const efsSecurityGroup = new aws.ec2.SecurityGroup(
 );
 
 const vpcEndpointSecurityGroup = new aws.ec2.SecurityGroup(
-  `${infraConfigResources.idPrefix}-vpc-endpoint-sg-${$app.stage}`,
+  `${infraConfigResources.idPrefix}-interface-vpc-endpoint-sg-${$app.stage}`,
   {
-    name: `${infraConfigResources.idPrefix}-vpc-endpoint-sg-${$app.stage}`,
+    name: `${infraConfigResources.idPrefix}-interface-vpc-endpoint-sg-${$app.stage}`,
     vpcId: vpcResources.vpc.id,
-    description: "EFS SG",
+    description: "interface-vpc-endpoint-sg",
     ingress: [{
       fromPort: 443,
       toPort: 443,
       protocol: "tcp",
-      securityGroups: [
-        webServerSecurityGroup.id,
-        asyncWorkerSecurityGroup.id,
-        clickHouseServerSecurityGroup.id
-      ],
-      description: "Allow ECS Access SG",
+      cidrBlocks: ["0.0.0.0/0"],
+      description: "allow all access",
     }],
     egress: [{
       fromPort: 0,
@@ -259,7 +255,7 @@ const vpcEndpointSecurityGroup = new aws.ec2.SecurityGroup(
       cidrBlocks: ["0.0.0.0/0"],
     }],
     tags: {
-      Name: `${infraConfigResources.idPrefix}-efs-sg-${$app.stage}`
+      Name: `${infraConfigResources.idPrefix}-interface-vpc-endpoint-sg-${$app.stage}`
     }
   }
 );
