@@ -98,6 +98,7 @@ const bastionInstance = new aws.ec2.Instance(
     cd /home/ssm-user
     sudo yum update -y
     sudo dnf install -y postgresql15 nodejs
+    psql --version
     sudo yum install -y https://s3.ap-northeast-1.amazonaws.com/amazon-ssm-ap-northeast-1/latest/linux_amd64/amazon-ssm-agent.rpm
     sudo dnf remove -y amazon-ssm-agent || true
     sudo dnf install -y amazon-ssm-agent
