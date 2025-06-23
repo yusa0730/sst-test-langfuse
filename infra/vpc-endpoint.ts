@@ -34,19 +34,3 @@ const cloudwatchLogsInterface = new aws.ec2.VpcEndpoint(
       Name: `${infraConfigResources.idPrefix}-vpc-endpoint-cloudwatch-logs-interface-${$app.stage}`,
     },
 });
-
-const cloudwatchMetricsInterface = new aws.ec2.VpcEndpoint(
-  `${infraConfigResources.idPrefix}-vpc-endpoint-cloudwatch-metrics-interface-${$app.stage}`,
-  {
-    vpcId: vpcResources.vpc.id,
-    serviceName: `com.amazonaws.${infraConfigResources.mainRegion}.monitoring`,
-    privateDnsEnabled: true,
-    securityGroupIds: [
-      securityGroupResources.vpcEndpointSecurityGroup.id
-    ],
-    subnetIds: vpcResources.vpcEndpointProtectedSubnets.map(subnet => subnet.id),
-    vpcEndpointType: "Interface",
-    tags: {
-      Name: `${infraConfigResources.idPrefix}-vpc-endpoint-cloudwatch-metrics-interface-${$app.stage}`,
-    },
-});
