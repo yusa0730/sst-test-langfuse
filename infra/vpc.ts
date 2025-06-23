@@ -4,15 +4,14 @@ import { cloudwatchResources } from "./cloudwatch";
 import { env } from "./env";
 
 console.log("======vpc.ts start======");
-const publicSubnets = [];
 const albProtectedSubnets = [];
 const ecsProtectedSubnets = [];
 const webServerProtectedSubnets = [];
 const asyncWorkerProtectedSubnets = [];
 const clickHouseProtectedSubnets = [];
-const bastionProtectedSubnets = [];
 const elasticachePrivateSubnets = [];
 const protectedRouteTables = [];
+const vpcEndpointProtectedSubnets = [];
 
 const vpc = new aws.ec2.Vpc(
   `${infraConfigResources.idPrefix}-vpc-${$app.stage}`,
@@ -66,18 +65,19 @@ new aws.ec2.Route(
   }
 )
 
+// bastion用
 const publicSubnet1a = new aws.ec2.Subnet(
   `${infraConfigResources.idPrefix}-public-subnet-1a-${$app.stage}`,
   {
     vpcId: vpc.id,
     cidrBlock: `10.0.0.0/24`,
     availabilityZone: "ap-northeast-1a",
+    mapPublicIpOnLaunch: true,
     tags: {
       Name: `${infraConfigResources.idPrefix}-public-subnet-1a-${$app.stage}`
     }
   }
 );
-publicSubnets.push(publicSubnet1a);
 
 new aws.ec2.RouteTableAssociation(
   `${infraConfigResources.idPrefix}-public-route-table-association-1a-${$app.stage}`,
@@ -93,12 +93,12 @@ const publicSubnet1c = new aws.ec2.Subnet(
     vpcId: vpc.id,
     cidrBlock: `10.0.1.0/24`,
     availabilityZone: "ap-northeast-1c",
+    mapPublicIpOnLaunch: true,
     tags: {
       Name: `${infraConfigResources.idPrefix}-public-subnet-1c-${$app.stage}`
     }
   }
 );
-publicSubnets.push(publicSubnet1c);
 
 new aws.ec2.RouteTableAssociation(
   `${infraConfigResources.idPrefix}-public-route-table-association-1c-${$app.stage}`,
@@ -130,7 +130,38 @@ const natGateway1a = new aws.ec2.NatGateway(
   },
 );
 
-if ($app.stage !== "production") {
+const protectedRouteTable1a = new aws.ec2.RouteTable(
+  `${infraConfigResources.idPrefix}-protected-rtb-1a-${$app.stage}`,
+  {
+    vpcId: vpc.id,
+    tags: {
+      Name: `${infraConfigResources.idPrefix}-protected-rtb-1a-${$app.stage}`
+    }
+  }
+);
+protectedRouteTables.push(protectedRouteTable1a);
+
+new aws.ec2.Route(
+  `${infraConfigResources.idPrefix}-protected-default-route-1a-${$app.stage}`,
+  {
+    routeTableId: protectedRouteTable1a.id,
+    gatewayId: natGateway1a.id,
+    destinationCidrBlock: "0.0.0.0/0"
+  }
+)
+
+const protectedRouteTable1c = new aws.ec2.RouteTable(
+  `${infraConfigResources.idPrefix}-protected-rtb-1c-${$app.stage}`,
+  {
+    vpcId: vpc.id,
+    tags: {
+      Name: `${infraConfigResources.idPrefix}-protected-rtb-1c-${$app.stage}`
+    }
+  }
+);
+protectedRouteTables.push(protectedRouteTable1c);
+
+if ($app.stage === "production" || $app.stage === "stg") {
   const eip1c = new aws.ec2.Eip(
     `${infraConfigResources.idPrefix}-eip-1c-${$app.stage}`,
     {
@@ -151,57 +182,25 @@ if ($app.stage !== "production") {
       }
     }
   );
+
+  new aws.ec2.Route(
+    `${infraConfigResources.idPrefix}-protected-default-route-1c-${$app.stage}`,
+    {
+      routeTableId: protectedRouteTable1c.id,
+      gatewayId: natGateway1c.id,
+      destinationCidrBlock: "0.0.0.0/0"
+    }
+  )
+} else {
+  new aws.ec2.Route(
+    `${infraConfigResources.idPrefix}-protected-default-route-1c-${$app.stage}`,
+    {
+      routeTableId: protectedRouteTable1c.id,
+      gatewayId: natGateway1a.id,
+      destinationCidrBlock: "0.0.0.0/0"
+    }
+  )
 }
-
-const protectedRouteTable1a = new aws.ec2.RouteTable(
-  `${infraConfigResources.idPrefix}-protected-rtb-1a-${$app.stage}`,
-  {
-    vpcId: vpc.id,
-    tags: {
-      Name: `${infraConfigResources.idPrefix}-protected-rtb-1a-${$app.stage}`
-    }
-  }
-);
-protectedRouteTables.push(protectedRouteTable1a);
-
-const protectedRouteTable1c = new aws.ec2.RouteTable(
-  `${infraConfigResources.idPrefix}-protected-rtb-1c-${$app.stage}`,
-  {
-    vpcId: vpc.id,
-    tags: {
-      Name: `${infraConfigResources.idPrefix}-protected-rtb-1c-${$app.stage}`
-    }
-  }
-);
-protectedRouteTables.push(protectedRouteTable1c);
-
-new aws.ec2.Route(
-  `${infraConfigResources.idPrefix}-protected-default-route-1a-${$app.stage}`,
-  {
-    routeTableId: protectedRouteTable1a.id,
-    gatewayId: natGateway1a.id,
-    destinationCidrBlock: "0.0.0.0/0"
-  }
-)
-
-new aws.ec2.Route(
-  `${infraConfigResources.idPrefix}-protected-default-route-1c-${$app.stage}`,
-  {
-    routeTableId: protectedRouteTable1c.id,
-    gatewayId: natGateway1a.id, // テスト用でnatを一つだけ利用したいため
-    destinationCidrBlock: "0.0.0.0/0"
-  }
-)
-
-// // 本番用
-// new aws.ec2.Route(
-//   `${infraConfigResources.idPrefix}-protected-default-route-1a-${$app.stage}`,
-//   {
-//     routeTableId: protectedRouteTable1c.id,
-//     gatewayId: natGateway1c.id,
-//     destinationCidrBlock: "0.0.0.0/0"
-//   }
-// )
 
 // =======alb network========
 const albProtectedSubnet1a = new aws.ec2.Subnet(
@@ -380,22 +379,63 @@ new aws.ec2.RouteTableAssociation(
   }
 );
 
-// bastion用
+// ========interface vpc endpoint subnet========
+const vpcEndpointProtectedSubnet1a = new aws.ec2.Subnet(
+  `${infraConfigResources.idPrefix}-vpc-endpoint-protected-subnet-1a-${$app.stage}`,
+  {
+    vpcId: vpc.id,
+    cidrBlock: `10.0.42.0/24`,
+    availabilityZone: "ap-northeast-1a",
+    tags: {
+      Name: `${infraConfigResources.idPrefix}-vpc-endpoint-protected-subnet-1a-${$app.stage}`
+    }
+  }
+);
+vpcEndpointProtectedSubnets.push(vpcEndpointProtectedSubnet1a);
+
+new aws.ec2.RouteTableAssociation(
+  `${infraConfigResources.idPrefix}-vpc-endpoint-protected-route-table-association-1a-${$app.stage}`,
+  {
+    routeTableId: protectedRouteTable1a.id,
+    subnetId: vpcEndpointProtectedSubnet1a.id
+  }
+);
+
+const vpcEndpointProtectedSubnet1c = new aws.ec2.Subnet(
+  `${infraConfigResources.idPrefix}-vpc-endpoint-protected-subnet-1c-${$app.stage}`,
+  {
+    vpcId: vpc.id,
+    cidrBlock: `10.0.43.0/24`,
+    availabilityZone: "ap-northeast-1c",
+    tags: {
+      Name: `${infraConfigResources.idPrefix}-vpc-endpoint-protected-subnet-1c-${$app.stage}`
+    }
+  }
+);
+vpcEndpointProtectedSubnets.push(vpcEndpointProtectedSubnet1c);
+
+new aws.ec2.RouteTableAssociation(
+  `${infraConfigResources.idPrefix}-vpc-endpoint-protected-route-table-association-1c-${$app.stage}`,
+  {
+    routeTableId: protectedRouteTable1c.id,
+    subnetId: vpcEndpointProtectedSubnet1c.id
+  }
+);
+
 const bastionProtectedSubnet1a = new aws.ec2.Subnet(
   `${infraConfigResources.idPrefix}-bastion-protected-subnet-1a-${$app.stage}`,
   {
     vpcId: vpc.id,
-    cidrBlock: `10.0.45.0/24`,
+    cidrBlock: `10.0.44.0/24`,
     availabilityZone: "ap-northeast-1a",
     tags: {
       Name: `${infraConfigResources.idPrefix}-bastion-protected-subnet-1a-${$app.stage}`
     }
   }
 );
-bastionProtectedSubnets.push(bastionProtectedSubnet1a);
 
 new aws.ec2.RouteTableAssociation(
-  `${infraConfigResources.idPrefix}-bastion-protected-route-table-association-1c-${$app.stage}`,
+  `${infraConfigResources.idPrefix}-bastion-protected-route-table-association-1a-${$app.stage}`,
   {
     routeTableId: protectedRouteTable1a.id,
     subnetId: bastionProtectedSubnet1a.id
@@ -466,33 +506,106 @@ new aws.ec2.RouteTableAssociation(
   }
 );
 
-// ======vpc endpoint=======
-const vpcEndpointS3Gateway = new aws.ec2.VpcEndpoint(
-  `${infraConfigResources.idPrefix}-vpc-endpoint-s3-gateway-${$app.stage}`,
+// DNS Firewall ログの作成
+const dnsFirewallLogGroup = new aws.cloudwatch.LogGroup(
+  `${infraConfigResources.idPrefix}-dns-firewall-log-group-${$app.stage}`,
   {
+    name: `/dnsfirewall/${infraConfigResources.idPrefix}-dns-firewall-log-${$app.stage}`,
+    retentionInDays: env.bffDnsFirewallLogRetentionInDays,
+  },
+);
+
+// Route 53 Resolver Query Logの設定
+const queryLogConfig = new aws.route53.ResolverQueryLogConfig(
+  `${infraConfigResources.idPrefix}-query-log-config-${$app.stage}`,
+  {
+    destinationArn: dnsFirewallLogGroup.arn,
+    name: `${infraConfigResources.idPrefix}-dns-firewall-query-log-config-${$app.stage}`,
+  },
+);
+
+// ルールグループ
+const dnsFirewallRuleGroup = new aws.route53.ResolverFirewallRuleGroup(
+  `${infraConfigResources.idPrefix}-rule-group-${$app.stage}`,
+  {
+    name: `${infraConfigResources.idPrefix}-dns-firewall-rule-group-${$app.stage}`,
+  },
+);
+
+// ルール
+new aws.route53.ResolverFirewallRule(
+  `${infraConfigResources.idPrefix}-dns-firewall-rule-101-${$app.stage}`,
+  {
+    name: "AWSManagedDomainsAggregateThreatList",
+    action: "BLOCK",
+    blockResponse: "NODATA",
+    firewallDomainListId: "rslvr-fdl-103b4302c274455e",
+    firewallRuleGroupId: dnsFirewallRuleGroup.id,
+    priority: 101,
+  },
+);
+new aws.route53.ResolverFirewallRule(
+  `${infraConfigResources.idPrefix}-dns-firewall-rule-102-${$app.stage}`,
+  {
+    name: "AWSManagedDomainsAmazonGuardDutyThreatList",
+    action: "BLOCK",
+    blockResponse: "NODATA",
+    firewallDomainListId: "rslvr-fdl-3ba9acb851c04c45",
+    firewallRuleGroupId: dnsFirewallRuleGroup.id,
+    priority: 102,
+  },
+);
+new aws.route53.ResolverFirewallRule(
+  `${infraConfigResources.idPrefix}-dns-firewall-rule-103-${$app.stage}`,
+  {
+    name: "AWSManagedDomainsBotnetCommandandControl",
+    action: "BLOCK",
+    blockResponse: "NODATA",
+    firewallDomainListId: "rslvr-fdl-1a63d8549cca46e6",
+    firewallRuleGroupId: dnsFirewallRuleGroup.id,
+    priority: 103,
+  },
+);
+new aws.route53.ResolverFirewallRule(
+  `${infraConfigResources.idPrefix}-dns-firewall-rule-104-${$app.stage}`,
+  {
+    name: "AWSManagedDomainsMalwareDomainList",
+    action: "BLOCK",
+    blockResponse: "NODATA",
+    firewallDomainListId: "rslvr-fdl-dc19e97bef3c454a",
+    firewallRuleGroupId: dnsFirewallRuleGroup.id,
+    priority: 104,
+  },
+);
+
+// ルールグループとVPCの関連付け
+new aws.route53.ResolverFirewallRuleGroupAssociation(
+  `${infraConfigResources.idPrefix}-rulegroup-association-${$app.stage}`,
+  {
+    firewallRuleGroupId: dnsFirewallRuleGroup.id,
     vpcId: vpc.id,
-    serviceName: `com.amazonaws.${infraConfigResources.mainRegion}.s3`,
-    privateDnsEnabled: false,
-    routeTableIds: [
-      protectedRouteTable1a.id,
-      protectedRouteTable1c.id
-    ],
-    vpcEndpointType: "Gateway",
-    tags: {
-      Name: `${infraConfigResources.idPrefix}-vpc-endpoint-s3-gateway-${$app.stage}`,
-    },
-});
+    priority: 101,
+  },
+);
+
+// Route 53 ResolverログをVPCに関連付ける
+new aws.route53.ResolverQueryLogConfigAssociation(
+  `${infraConfigResources.idPrefix}-query-logging-config-association-${$app.stage}`,
+  {
+    resolverQueryLogConfigId: queryLogConfig.id,
+    resourceId: vpc.id,
+  },
+);
 
 export const vpcResources = {
   vpc,
-  publicSubnets,
   albProtectedSubnets,
   ecsProtectedSubnets,
   webServerProtectedSubnets,
   asyncWorkerProtectedSubnets,
   clickHouseProtectedSubnets,
-  bastionProtectedSubnets,
+  vpcEndpointProtectedSubnets,
   elasticachePrivateSubnets,
-  vpcEndpointS3Gateway,
   protectedRouteTables,
+  bastionProtectedSubnet1a
 };

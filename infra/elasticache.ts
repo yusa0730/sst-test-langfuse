@@ -3,6 +3,20 @@ import { vpcResources } from "./vpc";
 import { securityGroupResources } from "./security-group";
 import { cloudwatchResources } from "./cloudwatch";
 
+const elasticacheParameterGroup = new aws.elasticache.ParameterGroup(
+  `${infraConfigResources.idPrefix}-elasticache-pg-${$app.stage}`,
+  {
+    family: "valkey7",
+    description: "Langfuse Valkey no-eviction",
+    parameters: [
+      { name: "maxmemory-policy", value: "noeviction" },
+    ],
+    tags: {
+      Name: `${infraConfigResources.idPrefix}-elasticache-pg-${$app.stage}`,
+    },
+  }
+);
+
 // ElastiCache Subnet Group
 const elasticacheSubnetGroup = new aws.elasticache.SubnetGroup(
   `${infraConfigResources.idPrefix}-elasticache-subnet-group-${$app.stage}`,
@@ -29,7 +43,7 @@ const elasticache = new aws.elasticache.ReplicationGroup(
     port: 6379,
     subnetGroupName: elasticacheSubnetGroup.name,
     securityGroupIds: [securityGroupResources.elasticacheServerSecurityGroup.id],
-    parameterGroupName: "default.valkey7",
+    parameterGroupName: elasticacheParameterGroup.name,
     applyImmediately: true,
     transitEncryptionEnabled: true,
     transitEncryptionMode: "required",

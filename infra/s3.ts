@@ -1,5 +1,4 @@
 import { infraConfigResources } from "./infra-config";
-import { wafResources } from "./waf";
 
 const albAccessLogBucket = new aws.s3.BucketV2(
   `${infraConfigResources.idPrefix}-alb-access-log-bucket-${$app.stage}`,
@@ -138,8 +137,6 @@ new aws.s3.BucketOwnershipControls(
     },
   },
 );
-
-// langfuse用のS3バケットを作成
 
 export const s3Resources = {
   albAccessLogBucket,

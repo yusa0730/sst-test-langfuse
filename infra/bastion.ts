@@ -91,16 +91,17 @@ const bastionInstance = new aws.ec2.Instance(
   {
     ami: ami.then(a => a.id),
     instanceType: "t3.large",
-    subnetId: vpcResources.bastionProtectedSubnets[0].id, // 🔁 Private/Public どちらでもOK（SSM用ならPrivateでも可）
+    subnetId: vpcResources.bastionProtectedSubnet1a.id, // 🔁 Private/Public どちらでもOK（SSM用ならPrivateでも可）
     vpcSecurityGroupIds: [bastionSecurityGroup.id],
     iamInstanceProfile: bastionInstanceProfile.name,
     userData: `#!/bin/bash
     cd /home/ssm-user
     sudo yum update -y
     sudo dnf install -y postgresql15 nodejs
+    psql --version
     sudo yum install -y https://s3.ap-northeast-1.amazonaws.com/amazon-ssm-ap-northeast-1/latest/linux_amd64/amazon-ssm-agent.rpm
-    sudo dnf remove -y amazon-ssm-agent || true           # もし rpm を上書きした場合
-    sudo dnf install -y amazon-ssm-agent                  # OS リポジトリ版
+    sudo dnf remove -y amazon-ssm-agent || true
+    sudo dnf install -y amazon-ssm-agent
     sudo systemctl enable --now amazon-ssm-agent
     export PNPM_VERSION=9.10.0
     curl -fsSL https://get.pnpm.io/install.sh | bash -
@@ -116,6 +117,7 @@ const bastionInstance = new aws.ec2.Instance(
     which redis-cli
     redis-cli -v
     set +H
+    cd /home/ssm-user
     sudo curl -o /etc/yum.repos.d/altinity.repo https://builds.altinity.cloud/yum-repo/altinity.repo
     sudo curl -o /etc/pki/rpm-gpg/RPM-GPG-KEY-altinity https://builds.altinity.cloud/yum-repo/RPM-GPG-KEY-altinity
     sudo rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-altinity

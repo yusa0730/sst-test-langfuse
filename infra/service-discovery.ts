@@ -5,7 +5,6 @@ import { vpcResources } from "./vpc";
 const langfuseNamespace = new aws.servicediscovery.PrivateDnsNamespace(
   `${infraConfigResources.idPrefix}-langfuse-namespace-${$app.stage}`,
   {
-    // name: `${infraConfigResources.idPrefix}-langfuse-namespace-${$app.stage}`,
     name: "langfuse.local",
     description: "Langfuse Service Discovery namespace",
     vpc: vpcResources.vpc.id,
@@ -20,7 +19,6 @@ const langfuseNamespace = new aws.servicediscovery.PrivateDnsNamespace(
 const clickhouseService = new aws.servicediscovery.Service(
   `${infraConfigResources.idPrefix}-clickhouse-service-${$app.stage}`,
   {
-    // name: `${infraConfigResources.idPrefix}-clickhouse-service-${$app.stage}`,
     name: "clickhouse",
     dnsConfig: {
       namespaceId: langfuseNamespace.id,

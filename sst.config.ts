@@ -16,6 +16,7 @@ export default $config({
     await import('./infra/vpc-peering');
     await import('./infra/bastion');
     await import('./infra/security-group');
+    await import('./infra/vpc-endpoint');
     await import('./infra/acm');
     await import('./infra/waf');
     await import('./infra/s3');

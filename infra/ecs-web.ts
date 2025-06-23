@@ -13,6 +13,12 @@ import { rdsResources } from "./rds";
 
 console.log("======ecs.ts start======");
 
+rdsResources.databaseUrlSecret.arn.apply((arn) => {
+  console.log("=======databaseUrlSecretArn=======");
+  console.log(arn);
+  console.log("=======databaseUrlSecretArn=======");
+});
+
 ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
   // ECS Service
   ecsClusterResources.ecsCluster.addService(
@@ -20,13 +26,12 @@ ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
     {
       cpu: "2 vCPU",
       memory: "4 GB",
-      storage: "21 GB",
       architecture: "arm64",
       scaling: {
         min: 1,
-        max: 1,
-        cpuUtilization: 70,
-        memoryUtilization: 70,
+        max: 3,
+        cpuUtilization: 60,
+        memoryUtilization: 60,
       },
       transform: {
         image: {
@@ -67,30 +72,38 @@ ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
           executionRoleArn: iamResources.langfuseEcsTaskExecuteRole.arn,
           taskRoleArn: iamResources.langfuseEcsTaskRole.arn,
           containerDefinitions: $util.all([
-            cloudwatchResources.langfuseWebServerLog,
-            s3Resources.langfuseEventBucket,
-            s3Resources.langfuseBlobBucket,
-            elasticacheResources.elasticache,
+            cloudwatchResources.langfuseWebServerLog.id,
+            s3Resources.langfuseEventBucket.id,
+            s3Resources.langfuseBlobBucket.id,
+            elasticacheResources.elasticache.primaryEndpointAddress,
+            elasticacheResources.elasticache.authToken,
             serviceDiscoveryResources.clickhouseService.name,
             serviceDiscoveryResources.langfuseNamespace.name,
-            albResources.alb.dnsName
+            rdsResources.databaseUrlSecret.arn,
+            infraConfigResources.clickhousePasswordParam.arn,
+            infraConfigResources.webNextSecretParam.arn,
+            infraConfigResources.webSaltParam.arn,
+            infraConfigResources.encryptionKeyParam.arn
           ])
           .apply(
             ([
-              logGroup,
-              eventBucket,
-              blobBucket,
-              elasticache,
+              logGroupId,
+              eventBucketId,
+              blobBucketId,
+              elasticachePrimaryEndpointAddress,
+              elasticacheAuthToken,
               clickhouseServiceName,
               langfuseNamespaceName,
-              albDnsName
+              databaseUrlSecretArn,
+              clickhousePasswordParamArn,
+              webNextSecretParamArn,
+              webSaltParamArn,
+              encryptionKeyParamArn
             ]) =>
               $jsonStringify([
               {
                 name: `${infraConfigResources.idPrefix}-web-server-ecs-task-${$app.stage}`,
                 image: `${url}:latest`,
-                cpu: 1024,
-                memory: 4096,
                 essential: true,
                 portMappings: [
                   {
@@ -103,33 +116,14 @@ ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
                   logDriver: "awslogs",
                   options: {
                     "awslogs-region": infraConfigResources.mainRegion,
-                    "awslogs-group": logGroup.id,
+                    "awslogs-group": logGroupId,
                     "awslogs-stream-prefix": "web-server",
                   },
                 },
                 environment: [
-                  // {
-                  //   name: "NEXTAUTH_URL",
-                  //   value: `http://${albDnsName}`
-                  // },
                   {
                     name: "NEXTAUTH_URL",
                     value: `https://langfuse.${infraConfigResources.domainName}`
-                  },
-                  {
-                    name: "NEXTAUTH_SECRET",
-                    // value: infraConfigResources.webNextSecret
-                    value: "YxWYBFFj07mUUGZQ0xzGayPA1CQe7s8dxHwHG03irh4="
-                  },
-                  {
-                    name: "SALT",
-                    // value: infraConfigResources.webSalt
-                    value: "OlJdIRNjb1T/Z2a892wur/7lxuRY2xwawEyfgzDIHI4="
-                  },
-                  {
-                    name: "ENCRIPTION_KEY",
-                    // value: infraConfigResources.encryptionKey
-                    value: "93ad754dbecbab246a581ebaaa637091b52bb9653e75a228140c1356ce0b4ca9"
                   },
                   {
                     name: "HOSTNAME",
@@ -137,7 +131,7 @@ ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
                   },
                   {
                     name: "S3_BUCKET_NAME",
-                    value: blobBucket.id
+                    value: blobBucketId
                   },
                   {
                     name: "LANGFUSE_S3_MEDIA_UPLOAD_ENABLED",
@@ -145,7 +139,7 @@ ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
                   },
                   {
                     name: "LANGFUSE_S3_MEDIA_UPLOAD_BUCKET",
-                    value: blobBucket.id
+                    value: blobBucketId
                   },
                   {
                     name: "LANGFUSE_S3_MEDIA_DOWNLOAD_URL_EXPIRY_SECONDS",
@@ -169,7 +163,7 @@ ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
                   },
                   {
                     name: "LANGFUSE_S3_EVENT_UPLOAD_BUCKET",
-                    value: eventBucket.id
+                    value: eventBucketId
                   },
                   {
                     name: "LANGFUSE_S3_EVENT_UPLOAD_REGION",
@@ -181,7 +175,7 @@ ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
                   },
                   {
                     name: "REDIS_HOST",
-                    value: elasticache.primaryEndpointAddress
+                    value: elasticachePrimaryEndpointAddress
                   },
                   {
                     name: "REDIS_PORT",
@@ -189,7 +183,7 @@ ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
                   },
                   {
                     name: "REDIS_AUTH",
-                    value: elasticache.authToken
+                    value: elasticacheAuthToken
                   },
                   {
                     name: "REDIS_TLS_ENABLED",
@@ -219,28 +213,37 @@ ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
                     name: "LANGFUSE_RETURN_FROM_CLICKHOUSE",
                     value: "true"
                   },
-                  {
-                    name: "DATABASE_URL",
-                    value: rdsResources.dbUrl
-                  },
-                  {
-                    name: "CLICKHOUSE_PASSWORD",
-                    value: infraConfigResources.clickhousePassword
-                  },
                   { name: "LANGFUSE_LOG_LEVEL", value: "trace"},
                   { name: "OTEL_EXPORTER_OTLP_ENDPOINT", value: "http://localhost:4318"},
                   { name: "OTEL_SERVICE_NAME", value: "langfuse"},
                 ],
-                // secrets: [
-                //   {
-                //     name: "DATABASE_URL",
-                //     valueFrom: rdsResources.dbUrlSecret.arn
-                //   },
-                // ],
+                secrets: [
+                  {
+                    name: "NEXTAUTH_SECRET",
+                    valueFrom: webNextSecretParamArn
+                  },
+                  {
+                    name: "SALT",
+                    valueFrom: webSaltParamArn
+                  },
+                  {
+                    name: "ENCRIPTION_KEY",
+                    valueFrom: encryptionKeyParamArn
+                  },
+                  {
+                    name: "CLICKHOUSE_PASSWORD",
+                    valueFrom: clickhousePasswordParamArn,
+                  },
+                  {
+                    name: "DATABASE_URL",
+                    valueFrom: databaseUrlSecretArn,
+                  },
+                ],
               },
             ]),
           )
         }
-      }
+      },
     });
-  });
+  }
+);
