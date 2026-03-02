@@ -59,8 +59,8 @@ const cluster = new aws.rds.Cluster(
   `${infraConfigResources.idPrefix}-aurora-serverless-cluster-${$app.stage}`,
   {
     clusterIdentifier: `${infraConfigResources.idPrefix}-aurora-serverless-cluster-${$app.stage}`,
-    engine: aws.rds.EngineType.AuroraPostgresql,
-    engineMode: aws.rds.EngineMode.Provisioned,
+    engine: "aurora-postgresql",
+    engineMode: "provisioned",
     engineVersion: "16.6",
     databaseName: "langfuse",
     masterUsername: masterUsername,
@@ -152,7 +152,7 @@ new aws.ssm.Parameter(
   `${infraConfigResources.idPrefix}-database-name-${$app.stage}`,
   {
     name: `/${infraConfigResources.idPrefix}/langfuse/${$app.stage}/rds/database/name`,
-    type: aws.ssm.ParameterType.String,
+    type: "String",
     value: cluster.databaseName,
   }
 );
@@ -162,7 +162,7 @@ new aws.ssm.Parameter(
   `${infraConfigResources.idPrefix}-host-name-${$app.stage}`,
   {
     name: `/${infraConfigResources.idPrefix}/langfuse/${$app.stage}/rds/host/name`,
-    type: aws.ssm.ParameterType.String,
+    type: "String",
     value: cluster.endpoint.apply(ep => ep.split(":"))[0],
   }
 );

@@ -105,7 +105,7 @@ new aws.route53.Record(
   {
     zoneId: infraConfigResources.hostedZone.zoneId,
     name: `alb.langfuse.${infraConfigResources.domainName}`,
-    type: aws.route53.RecordType.A,
+    type: "A",
     aliases: [
       {
         name: alb.dnsName,
