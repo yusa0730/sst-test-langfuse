@@ -1,6 +1,6 @@
 import { infraConfigResources } from "./infra-config";
 
-const albAccessLogBucket = new aws.s3.BucketV2(
+const albAccessLogBucket = new aws.s3.Bucket(
   `${infraConfigResources.idPrefix}-alb-access-log-bucket-${$app.stage}`,
   {
     bucket: `${infraConfigResources.idPrefix}-alb-access-log-bucket-${$app.stage}`,
@@ -23,7 +23,7 @@ const albAccessLogBucket = new aws.s3.BucketV2(
   },
 );
 
-const albConnectionLogBucket = new aws.s3.BucketV2(
+const albConnectionLogBucket = new aws.s3.Bucket(
   `${infraConfigResources.idPrefix}-alb-connection-log-bucket-${$app.stage}`,
   {
     bucket: `${infraConfigResources.idPrefix}-alb-connection-log-bucket-${$app.stage}`,
@@ -47,7 +47,7 @@ const albConnectionLogBucket = new aws.s3.BucketV2(
 );
 
 // ログバケット
-const cloudFrontLogBucket = new aws.s3.BucketV2(
+const cloudFrontLogBucket = new aws.s3.Bucket(
   `${infraConfigResources.idPrefix}-cloudfront-log-bucket-${$app.stage}`,
   {
     bucket: `${infraConfigResources.idPrefix}-cloudfront-log-bucket-${$app.stage}`,
@@ -81,11 +81,11 @@ new aws.s3.BucketOwnershipControls(
   },
 );
 
-const langfuseBlobBucket = new aws.s3.BucketV2(
+const langfuseBlobBucket = new aws.s3.Bucket(
   `${infraConfigResources.idPrefix}-blob-bucket-${$app.stage}`,
   {
     bucket: `${infraConfigResources.idPrefix}-blob-bucket-${$app.stage}`,
-    forceDestroy: true,
+    forceDestroy: false,
   },
 );
 
@@ -100,11 +100,11 @@ new aws.s3.BucketOwnershipControls(
   },
 );
 
-const langfuseEventBucket = new aws.s3.BucketV2(
+const langfuseEventBucket = new aws.s3.Bucket(
   `${infraConfigResources.idPrefix}-event-bucket-${$app.stage}`,
   {
     bucket: `${infraConfigResources.idPrefix}-event-bucket-${$app.stage}`,
-    forceDestroy: true,
+    forceDestroy: false,
   },
 );
 
@@ -119,11 +119,11 @@ new aws.s3.BucketOwnershipControls(
   },
 );
 
-const langfuseClickhouseBucket = new aws.s3.BucketV2(
+const langfuseClickhouseBucket = new aws.s3.Bucket(
   `${infraConfigResources.idPrefix}-clickhouse-bucket-${$app.stage}`,
   {
     bucket: `${infraConfigResources.idPrefix}-clickhouse-bucket-${$app.stage}`,
-    forceDestroy: true,
+    forceDestroy: false,
   },
 );
 

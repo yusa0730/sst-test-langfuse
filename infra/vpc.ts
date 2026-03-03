@@ -65,7 +65,6 @@ new aws.ec2.Route(
   }
 )
 
-// bastion用
 const publicSubnet1a = new aws.ec2.Subnet(
   `${infraConfigResources.idPrefix}-public-subnet-1a-${$app.stage}`,
   {
@@ -161,7 +160,7 @@ const protectedRouteTable1c = new aws.ec2.RouteTable(
 );
 protectedRouteTables.push(protectedRouteTable1c);
 
-if ($app.stage === "production" || $app.stage === "stg") {
+if ($app.stage === "dev") {
   const eip1c = new aws.ec2.Eip(
     `${infraConfigResources.idPrefix}-eip-1c-${$app.stage}`,
     {
