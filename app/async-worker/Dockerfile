@@ -1,1 +1,1 @@
-FROM langfuse/langfuse-worker:3.139.0
+FROM langfuse/langfuse-worker:3.155.1
