@@ -28,8 +28,10 @@ export default $config({
     await import('./infra/elasticache');
     await import('./infra/rds');
     await import('./infra/efs');
+    await import('./infra/nlb');
     await import('./infra/ecs-cluster');
     await import('./infra/ecr');
+    await import('./infra/ecs-clickhouse-keeper');
     await import('./infra/ecs-clickhouse');
     await import('./infra/ecs-async-worker');
     await import('./infra/ecs-web');

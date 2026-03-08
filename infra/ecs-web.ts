@@ -1,17 +1,17 @@
-import { infraConfigResources } from "./infra-config";
-import { vpcResources } from "./vpc";
-import { cloudwatchResources } from "./cloudwatch";
-import { iamResources } from "./iam";
-import { securityGroupResources } from "./security-group";
 import { albResources } from "./alb";
+import { cloudwatchResources } from "./cloudwatch";
 import { ecrResources } from "./ecr";
-import { serviceDiscoveryResources } from "./service-discovery";
-import { s3Resources } from "./s3";
-import { elasticacheResources } from "./elasticache";
 import { ecsClusterResources } from "./ecs-cluster";
+import { elasticacheResources } from "./elasticache";
+import { iamResources } from "./iam";
+import { infraConfigResources } from "./infra-config";
+import { nlbResources } from "./nlb";
 import { rdsResources } from "./rds";
+import { s3Resources } from "./s3";
+import { securityGroupResources } from "./security-group";
+import { vpcResources } from "./vpc";
 
-console.log("======ecs.ts start======");
+console.log("======ecs-web.ts start======");
 
 rdsResources.databaseUrlSecret.arn.apply((arn) => {
   console.log("=======databaseUrlSecretArn=======");
@@ -77,8 +77,7 @@ ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
             s3Resources.langfuseBlobBucket.id,
             elasticacheResources.elasticache.primaryEndpointAddress,
             elasticacheResources.elasticache.authToken,
-            serviceDiscoveryResources.clickhouseService.name,
-            serviceDiscoveryResources.langfuseNamespace.name,
+            nlbResources.nlb.dnsName,
             rdsResources.databaseUrlSecret.arn,
             infraConfigResources.clickhousePasswordParam.arn,
             infraConfigResources.webNextSecretParam.arn,
@@ -92,8 +91,7 @@ ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
               blobBucketId,
               elasticachePrimaryEndpointAddress,
               elasticacheAuthToken,
-              clickhouseServiceName,
-              langfuseNamespaceName,
+              nlbDnsName,
               databaseUrlSecretArn,
               clickhousePasswordParamArn,
               webNextSecretParamArn,
@@ -147,11 +145,11 @@ ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
                   },
                   {
                     name: "CLICKHOUSE_MIGRATION_URL",
-                    value: `clickhouse://${clickhouseServiceName}.${langfuseNamespaceName}:9000`
+                    value: `clickhouse://${nlbDnsName}:9000`
                   },
                   {
                     name: "CLICKHOUSE_URL",
-                    value: `http://${clickhouseServiceName}.${langfuseNamespaceName}:8123`
+                    value: `http://${nlbDnsName}:8123`
                   },
                   {
                     name: "CLICKHOUSE_USER",
@@ -159,7 +157,11 @@ ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
                   },
                   {
                     name: "CLICKHOUSE_CLUSTER_ENABLED",
-                    value: "false"
+                    value: "true"
+                  },
+                  {
+                    name: "CLICKHOUSE_CLUSTER_NAME",
+                    value: "default"
                   },
                   {
                     name: "LANGFUSE_S3_EVENT_UPLOAD_BUCKET",
@@ -227,7 +229,7 @@ ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
                     valueFrom: webSaltParamArn
                   },
                   {
-                    name: "ENCRIPTION_KEY",
+                    name: "ENCRYPTION_KEY",
                     valueFrom: encryptionKeyParamArn
                   },
                   {
