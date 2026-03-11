@@ -97,11 +97,22 @@ const bastionInstance = new aws.ec2.Instance(
     subnetId: vpcResources.bastionProtectedSubnet1a.id, // 🔁 Private/Public どちらでもOK（SSM用ならPrivateでも可）
     vpcSecurityGroupIds: [bastionSecurityGroup.id],
     iamInstanceProfile: bastionInstanceProfile.name,
+
+    rootBlockDevice: {
+      volumeType: "gp3",
+      volumeSize: 30,
+      encrypted: true,
+      deleteOnTermination: true,
+    },
+
     userData: `#!/bin/bash
     cd /home/ssm-user
     sudo yum update -y
-    sudo dnf install -y postgresql16 nodejs
+    sudo dnf install -y postgresql16 nodejs curl gcc gcc-c++ openssl-devel cloud-utils-growpart xfsprogs
     psql --version
+    sudo growpart /dev/nvme0n1 1
+    sudo xfs_growfs -d /
+    df -h /
     sudo yum install -y https://s3.ap-northeast-1.amazonaws.com/amazon-ssm-ap-northeast-1/latest/linux_amd64/amazon-ssm-agent.rpm
     sudo dnf remove -y amazon-ssm-agent || true
     sudo dnf install -y amazon-ssm-agent
