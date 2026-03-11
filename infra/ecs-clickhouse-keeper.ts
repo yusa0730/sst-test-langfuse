@@ -1,3 +1,4 @@
+import * as pulumi from "@pulumi/pulumi";
 import { cloudwatchResources } from "./cloudwatch";
 import { ecrResources } from "./ecr";
 import { ecsClusterResources } from "./ecs-cluster";
@@ -7,7 +8,8 @@ import { infraConfigResources } from "./infra-config";
 import { securityGroupResources } from "./security-group";
 import { serviceDiscoveryResources } from "./service-discovery";
 import { vpcResources } from "./vpc";
-import * as pulumi from "@pulumi/pulumi";
+
+console.log("======ecs-clickhouse-keeper.ts start======");
 
 interface KeeperConfig {
   keeperNumber: number;
@@ -17,31 +19,26 @@ interface KeeperConfig {
   subnetIds: pulumi.Input<string>[];
 }
 
-console.log("======ecs-clickhouse-keeper.ts start======");
-
-// ClickHouse Keeper nodes #1, #2, #3
-// 3 nodes across 2 AZs: Keeper 1 in 1a, Keeper 2 in 1c, Keeper 3 in 1a
-
 const keepers: KeeperConfig[] = [
   {
     keeperNumber: 1,
     serverId: "1",
     serviceDiscoveryArn: serviceDiscoveryResources.clickhouseKeeper1Service.arn,
-    dataAccessPointId: efsResources.keeper1DataAccessPointV2.id,
+    dataAccessPointId: efsResources.keeper1DataAccessPoint.id,
     subnetIds: [vpcResources.clickHouseProtectedSubnets[0].id], // 1a
   },
   {
     keeperNumber: 2,
     serverId: "2",
     serviceDiscoveryArn: serviceDiscoveryResources.clickhouseKeeper2Service.arn,
-    dataAccessPointId: efsResources.keeper2DataAccessPointV2.id,
+    dataAccessPointId: efsResources.keeper2DataAccessPoint.id,
     subnetIds: [vpcResources.clickHouseProtectedSubnets[1].id], // 1c
   },
   {
     keeperNumber: 3,
     serverId: "3",
     serviceDiscoveryArn: serviceDiscoveryResources.clickhouseKeeper3Service.arn,
-    dataAccessPointId: efsResources.keeper3DataAccessPointV2.id,
+    dataAccessPointId: efsResources.keeper3DataAccessPoint.id,
     subnetIds: [vpcResources.clickHouseProtectedSubnets[0].id], // 1a
   },
 ];
@@ -61,7 +58,7 @@ ecrResources.clickHouseKeeperContainerRepository.repositoryUrl.apply((url) => {
             push: true,
             tags: [`${url}:latest`],
             dockerfile: {
-              location: "../../app/clickhouse-keeper/Dockerfile", // Path to Dockerfile
+              location: "../../app/clickhouse-keeper/Dockerfile",
             },
             context: {
               location: "../../app/clickhouse-keeper",

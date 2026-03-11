@@ -13,9 +13,6 @@ import { nlbResources } from "./nlb";
 
 console.log("======ecs-clickhouse.ts start======");
 
-// ClickHouse Server #1 and #2 share the same Docker image
-// Each server gets its own ECS service, EFS volumes, and service discovery registration
-
 interface ClickHouseServerConfig {
   serverNumber: number;
   replicaName: string;
@@ -32,8 +29,9 @@ const servers: ClickHouseServerConfig[] = [
     replicaName: "clickhouse-1",
     interserverHost: "clickhouse-1.langfuse.local",
     serviceDiscoveryArn: serviceDiscoveryResources.clickhouse1Service.arn,
-    dataAccessPointId: efsResources.clickhouse1DataAccessPointV2.id,
-    logAccessPointId: efsResources.clickhouse1LogAccessPointV2.id,
+    // 既存データを保持する CH1
+    dataAccessPointId: efsResources.clickhouseDataAccessPoint.id,
+    logAccessPointId: efsResources.clickhouseLogAccessPoint.id,
     subnetIds: [vpcResources.clickHouseProtectedSubnets[0].id],
   },
   {
@@ -41,8 +39,9 @@ const servers: ClickHouseServerConfig[] = [
     replicaName: "clickhouse-2",
     interserverHost: "clickhouse-2.langfuse.local",
     serviceDiscoveryArn: serviceDiscoveryResources.clickhouse2Service.arn,
-    dataAccessPointId: efsResources.clickhouse2DataAccessPointV2.id,
-    logAccessPointId: efsResources.clickhouse2LogAccessPointV2.id,
+    // 新規追加の CH2
+    dataAccessPointId: efsResources.clickhouse2DataAccessPoint.id,
+    logAccessPointId: efsResources.clickhouse2LogAccessPoint.id,
     subnetIds: [vpcResources.clickHouseProtectedSubnets[1].id],
   },
 ];
@@ -62,7 +61,7 @@ ecrResources.clickHouseContainerRepository.repositoryUrl.apply((url) => {
             push: true,
             tags: [`${url}:latest`],
             dockerfile: {
-              location: "../../app/clickhouse/Dockerfile", // Path to Dockerfile
+              location: "../../app/clickhouse/Dockerfile",
             },
             context: {
               location: "../../app/clickhouse",
@@ -137,101 +136,100 @@ ecrResources.clickHouseContainerRepository.repositoryUrl.apply((url) => {
                 s3Resources.langfuseClickhouseBucket.id,
                 infraConfigResources.clickhousePasswordParam.arn,
               ])
-              .apply(
-                ([logGroupId, bucketId, clickhousePasswordParamArn]) =>
-                  $jsonStringify([
-                    {
-                      name: `${infraConfigResources.idPrefix}-clickhouse-${num}-ecs-task-${$app.stage}`,
-                      image: `${url}:latest`,
-                      essential: true,
-                      ulimits: [
-                        {
-                          name: "nofile",
-                          softLimit: 65535,
-                          hardLimit: 65535,
-                        },
-                      ],
-                      portMappings: [
-                        {
-                          containerPort: 8123,
-                          hostPort: 8123,
-                          protocol: "tcp",
-                        },
-                        {
-                          containerPort: 9000,
-                          hostPort: 9000,
-                          protocol: "tcp",
-                        },
-                        {
-                          containerPort: 9009,
-                          hostPort: 9009,
-                          protocol: "tcp",
-                        },
-                      ],
-                      mountPoints: [
-                        {
-                          sourceVolume: "clickhouse-data",
-                          containerPath: "/var/lib/clickhouse",
-                          readOnly: false,
-                        },
-                        {
-                          sourceVolume: "clickhouse-log",
-                          containerPath: "/var/log/clickhouse-server",
-                          readOnly: false,
-                        },
-                      ],
-                      healthCheck: {
-                        command: [
-                          "CMD-SHELL",
-                          "wget --no-verbose --tries=1 --spider http://localhost:8123/ping || exit 1",
-                        ],
-                        interval: 5,
-                        timeout: 5,
-                        retries: 10,
-                        startPeriod: 1,
+              .apply(([logGroupId, bucketId, clickhousePasswordParamArn]) =>
+                $jsonStringify([
+                  {
+                    name: `${infraConfigResources.idPrefix}-clickhouse-${num}-ecs-task-${$app.stage}`,
+                    image: `${url}:latest`,
+                    essential: true,
+                    ulimits: [
+                      {
+                        name: "nofile",
+                        softLimit: 65535,
+                        hardLimit: 65535,
                       },
-                      logConfiguration: {
-                        logDriver: "awslogs",
-                        options: {
-                          "awslogs-region": infraConfigResources.mainRegion,
-                          "awslogs-group": logGroupId,
-                          "awslogs-stream-prefix": `clickhouse-${num}`,
-                        },
+                    ],
+                    portMappings: [
+                      {
+                        containerPort: 8123,
+                        hostPort: 8123,
+                        protocol: "tcp",
                       },
-                      environment: [
-                        {
-                          name: "CLICKHOUSE_DB",
-                          value: "default",
-                        },
-                        {
-                          name: "CLICKHOUSE_USER",
-                          value: "clickhouse",
-                        },
-                        {
-                          name: "AWS_REGION",
-                          value: infraConfigResources.mainRegion,
-                        },
-                        {
-                          name: "S3_BUCKET",
-                          value: bucketId,
-                        },
-                        {
-                          name: "CLICKHOUSE_REPLICA_NAME",
-                          value: server.replicaName,
-                        },
-                        {
-                          name: "CLICKHOUSE_INTERSERVER_HOST",
-                          value: server.interserverHost,
-                        },
+                      {
+                        containerPort: 9000,
+                        hostPort: 9000,
+                        protocol: "tcp",
+                      },
+                      {
+                        containerPort: 9009,
+                        hostPort: 9009,
+                        protocol: "tcp",
+                      },
+                    ],
+                    mountPoints: [
+                      {
+                        sourceVolume: "clickhouse-data",
+                        containerPath: "/var/lib/clickhouse",
+                        readOnly: false,
+                      },
+                      {
+                        sourceVolume: "clickhouse-log",
+                        containerPath: "/var/log/clickhouse-server",
+                        readOnly: false,
+                      },
+                    ],
+                    healthCheck: {
+                      command: [
+                        "CMD-SHELL",
+                        "wget --no-verbose --tries=1 --spider http://localhost:8123/ping || exit 1",
                       ],
-                      secrets: [
-                        {
-                          name: "CLICKHOUSE_PASSWORD",
-                          valueFrom: clickhousePasswordParamArn,
-                        },
-                      ],
+                      interval: 10,
+                      timeout: 5,
+                      retries: 10,
+                      startPeriod: 30,
                     },
-                  ])
+                    logConfiguration: {
+                      logDriver: "awslogs",
+                      options: {
+                        "awslogs-region": infraConfigResources.mainRegion,
+                        "awslogs-group": logGroupId,
+                        "awslogs-stream-prefix": `clickhouse-${num}`,
+                      },
+                    },
+                    environment: [
+                      {
+                        name: "CLICKHOUSE_DB",
+                        value: "default",
+                      },
+                      {
+                        name: "CLICKHOUSE_USER",
+                        value: "clickhouse",
+                      },
+                      {
+                        name: "AWS_REGION",
+                        value: infraConfigResources.mainRegion,
+                      },
+                      {
+                        name: "S3_BUCKET",
+                        value: bucketId,
+                      },
+                      {
+                        name: "CLICKHOUSE_REPLICA_NAME",
+                        value: server.replicaName,
+                      },
+                      {
+                        name: "CLICKHOUSE_INTERSERVER_HOST",
+                        value: server.interserverHost,
+                      },
+                    ],
+                    secrets: [
+                      {
+                        name: "CLICKHOUSE_PASSWORD",
+                        valueFrom: clickhousePasswordParamArn,
+                      },
+                    ],
+                  },
+                ])
               ),
           },
         },

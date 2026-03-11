@@ -81,107 +81,71 @@ const createAccessPoint = (name: string, path: string) => {
 };
 
 // -----------------------------------------------------------------------------
-// current access points
+// 既存本番データ用（CH1専用）
 // -----------------------------------------------------------------------------
 
-// ClickHouse Server #1
-const clickhouse1DataAccessPoint = createAccessPoint(
-  "clickhouse-1-data",
-  "clickhouse-1-data"
-);
-const clickhouse1LogAccessPoint = createAccessPoint(
-  "clickhouse-1-log",
-  "clickhouse-1-log"
+const clickhouseDataAccessPoint = createAccessPoint(
+  "data",
+  "clickhouse-data"
 );
 
-// ClickHouse Server #2
+const clickhouseLogAccessPoint = createAccessPoint(
+  "log",
+  "clickhouse-log"
+);
+
+// 既存コードとの互換用エイリアス
+const clickhouse1DataAccessPoint = clickhouseDataAccessPoint;
+const clickhouse1LogAccessPoint = clickhouseLogAccessPoint;
+
+// -----------------------------------------------------------------------------
+// 追加する CH2 用
+// -----------------------------------------------------------------------------
+
 const clickhouse2DataAccessPoint = createAccessPoint(
   "clickhouse-2-data",
   "clickhouse-2-data"
 );
+
 const clickhouse2LogAccessPoint = createAccessPoint(
   "clickhouse-2-log",
   "clickhouse-2-log"
 );
 
-// ClickHouse Keeper #1
+// -----------------------------------------------------------------------------
+// 追加する Keeper 用
+// -----------------------------------------------------------------------------
+
 const keeper1DataAccessPoint = createAccessPoint(
   "keeper-1-data",
   "clickhouse-keeper-1-data"
 );
 
-// ClickHouse Keeper #2
 const keeper2DataAccessPoint = createAccessPoint(
   "keeper-2-data",
   "clickhouse-keeper-2-data"
 );
 
-// ClickHouse Keeper #3
 const keeper3DataAccessPoint = createAccessPoint(
   "keeper-3-data",
   "clickhouse-keeper-3-data"
 );
 
-// -----------------------------------------------------------------------------
-// v2 access points
-// -----------------------------------------------------------------------------
-
-// ClickHouse Server #1 v2
-const clickhouse1DataAccessPointV2 = createAccessPoint(
-  "clickhouse-1-data-v2",
-  "clickhouse-1-data-v2"
-);
-const clickhouse1LogAccessPointV2 = createAccessPoint(
-  "clickhouse-1-log-v2",
-  "clickhouse-1-log-v2"
-);
-
-// ClickHouse Server #2 v2
-const clickhouse2DataAccessPointV2 = createAccessPoint(
-  "clickhouse-2-data-v2",
-  "clickhouse-2-data-v2"
-);
-const clickhouse2LogAccessPointV2 = createAccessPoint(
-  "clickhouse-2-log-v2",
-  "clickhouse-2-log-v2"
-);
-
-// ClickHouse Keeper #1 v2
-const keeper1DataAccessPointV2 = createAccessPoint(
-  "keeper-1-data-v2",
-  "clickhouse-keeper-1-data-v2"
-);
-
-// ClickHouse Keeper #2 v2
-const keeper2DataAccessPointV2 = createAccessPoint(
-  "keeper-2-data-v2",
-  "clickhouse-keeper-2-data-v2"
-);
-
-// ClickHouse Keeper #3 v2
-const keeper3DataAccessPointV2 = createAccessPoint(
-  "keeper-3-data-v2",
-  "clickhouse-keeper-3-data-v2"
-);
-
 export const efsResources = {
   efsFileSystem,
 
-  // current
+  // CH1（既存本番データ）
+  clickhouseDataAccessPoint,
+  clickhouseLogAccessPoint,
   clickhouse1DataAccessPoint,
   clickhouse1LogAccessPoint,
+
+  // CH2
   clickhouse2DataAccessPoint,
   clickhouse2LogAccessPoint,
+
+  // Keeper
   keeper1DataAccessPoint,
   keeper2DataAccessPoint,
   keeper3DataAccessPoint,
-
-  // v2
-  clickhouse1DataAccessPointV2,
-  clickhouse1LogAccessPointV2,
-  clickhouse2DataAccessPointV2,
-  clickhouse2LogAccessPointV2,
-  keeper1DataAccessPointV2,
-  keeper2DataAccessPointV2,
-  keeper3DataAccessPointV2,
 };
