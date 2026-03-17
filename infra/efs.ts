@@ -95,8 +95,22 @@ const clickhouseLogAccessPoint = createAccessPoint(
 );
 
 // 既存コードとの互換用エイリアス
-const clickhouse1DataAccessPoint = clickhouseDataAccessPoint;
-const clickhouse1LogAccessPoint = clickhouseLogAccessPoint;
+// const clickhouse1DataAccessPoint = clickhouseDataAccessPoint;
+// const clickhouse1LogAccessPoint = clickhouseLogAccessPoint;
+
+// -----------------------------------------------------------------------------
+// 追加する CH1 用
+// -----------------------------------------------------------------------------
+
+const clickhouse1DataAccessPoint = createAccessPoint(
+  "clickhouse-1-data",
+  "clickhouse-1-data"
+);
+
+const clickhouse1LogAccessPoint = createAccessPoint(
+  "clickhouse-1-log",
+  "clickhouse-1-log"
+);
 
 // -----------------------------------------------------------------------------
 // 追加する CH2 用

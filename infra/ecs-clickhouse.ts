@@ -30,8 +30,8 @@ const servers: ClickHouseServerConfig[] = [
     interserverHost: "clickhouse-1.langfuse.local",
     serviceDiscoveryArn: serviceDiscoveryResources.clickhouse1Service.arn,
     // 既存データを保持する CH1
-    dataAccessPointId: efsResources.clickhouseDataAccessPoint.id,
-    logAccessPointId: efsResources.clickhouseLogAccessPoint.id,
+    dataAccessPointId: efsResources.clickhouse1DataAccessPoint.id,
+    logAccessPointId: efsResources.clickhouse1LogAccessPoint.id,
     subnetIds: [vpcResources.clickHouseProtectedSubnets[0].id],
   },
   {
