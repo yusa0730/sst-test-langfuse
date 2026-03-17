@@ -138,6 +138,55 @@ new aws.s3.BucketOwnershipControls(
   },
 );
 
+const clickhouseBackupBucket = new aws.s3.Bucket(
+  `${infraConfigResources.idPrefix}-clickhouse-backup-bucket-${$app.stage}`,
+  {
+    bucket: `${infraConfigResources.idPrefix}-clickhouse-backup-bucket-${$app.stage}`,
+    forceDestroy: false,
+    tags: {
+      Name: `${infraConfigResources.idPrefix}-clickhouse-backup-bucket-${$app.stage}`,
+    },
+  }
+);
+
+// 公開ブロック
+new aws.s3.BucketPublicAccessBlock(
+  `${infraConfigResources.idPrefix}-clickhouse-backup-bucket-pab-${$app.stage}`,
+  {
+    bucket: clickhouseBackupBucket.id,
+    blockPublicAcls: true,
+    blockPublicPolicy: true,
+    ignorePublicAcls: true,
+    restrictPublicBuckets: true,
+  }
+);
+
+// オブジェクト所有
+new aws.s3.BucketOwnershipControls(
+  `${infraConfigResources.idPrefix}-clickhouse-backup-bucket-ownership-${$app.stage}`,
+  {
+    bucket: clickhouseBackupBucket.id,
+    rule: {
+      objectOwnership: "BucketOwnerPreferred",
+    },
+  }
+);
+
+// サーバーサイド暗号化（まずは AES256 で十分）
+new aws.s3.BucketServerSideEncryptionConfiguration(
+  `${infraConfigResources.idPrefix}-clickhouse-backup-bucket-sse-${$app.stage}`,
+  {
+    bucket: clickhouseBackupBucket.id,
+    rules: [
+      {
+        applyServerSideEncryptionByDefault: {
+          sseAlgorithm: "AES256",
+        },
+      },
+    ],
+  }
+);
+
 export const s3Resources = {
   albAccessLogBucket,
   albConnectionLogBucket,
