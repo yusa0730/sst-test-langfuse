@@ -34,7 +34,7 @@ ecrResources.clickHouseContainerRepository.repositoryUrl.apply((url) => {
             location: "../../app/clickhouse/Dockerfile", // Path to Dockerfile
           },
           context: {
-            location: "../../app", // Path to application source code
+            location: "../../app/clickhouse", // Path to application source code
           },
         },
         service: {
