@@ -185,8 +185,7 @@ ecrResources.asyncWorkerContainerRepository.repositoryUrl.apply((url) => {
                     value: "true"
                   },
                   { name: "LANGFUSE_LOG_LEVEL", value: "trace"},
-                  { name: "OTEL_EXPORTER_OTLP_ENDPOINT", value: "http://localhost:4318"},
-                  { name: "OTEL_SERVICE_NAME", value: "langfuse"},
+                  { name: "OTEL_SDK_DISABLED", value: "true"},
                 ],
                 secrets: [
                   {
