@@ -1,4 +1,6 @@
 import { infraConfigResources } from "./infra-config";
+import * as pulumi from "@pulumi/pulumi";
+import * as aws from "@pulumi/aws";
 
 const albAccessLogBucket = new aws.s3.Bucket(
   `${infraConfigResources.idPrefix}-alb-access-log-bucket-${$app.stage}`,
@@ -187,11 +189,47 @@ new aws.s3.BucketServerSideEncryptionConfiguration(
   }
 );
 
+const clickhouseScriptBucket = new aws.s3.Bucket(
+  `${infraConfigResources.idPrefix}-clickhouse-script-${$app.stage}`,
+  {
+    bucket: `${infraConfigResources.idPrefix}-clickhouse-script-${$app.stage}`,
+    forceDestroy: false,
+    tags: {
+      Name: `${infraConfigResources.idPrefix}-clickhouse-script-${$app.stage}`,
+    },
+  }
+);
+
+new aws.s3.BucketObject(
+  `${infraConfigResources.idPrefix}-backup-script-${$app.stage}`,
+  {
+    bucket: clickhouseScriptBucket.id,
+    key: `clickhouse/${$app.stage}/backup_clickhouse.sh`,
+    source: new pulumi.asset.FileAsset(
+      "infra/scripts/clickhouse/backup_clickhouse.sh"
+    ),
+    serverSideEncryption: "AES256",
+  }
+);
+
+new aws.s3.BucketObject(
+  `${infraConfigResources.idPrefix}-restore-script-${$app.stage}`,
+  {
+    bucket: clickhouseScriptBucket.id,
+    key: `clickhouse/${$app.stage}/restore_clickhouse.sh`,
+    source: new pulumi.asset.FileAsset(
+      "infra/scripts/clickhouse/restore_clickhouse.sh"
+    ),
+    serverSideEncryption: "AES256",
+  }
+);
+
 export const s3Resources = {
   albAccessLogBucket,
   albConnectionLogBucket,
   cloudFrontLogBucket,
   langfuseBlobBucket,
   langfuseEventBucket,
-  langfuseClickhouseBucket
+  langfuseClickhouseBucket,
+  // clickhouseScriptBucket
 };

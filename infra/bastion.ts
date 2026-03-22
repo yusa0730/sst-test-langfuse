@@ -139,6 +139,10 @@ const bastionInstance = new aws.ec2.Instance(
     sudo rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-altinity
     sudo dnf clean all
     sudo dnf install -y clickhouse-client
+    install -d -o ssm-user -g ssm-user -m 0700 \
+      /home/ssm-user/clickhouse-ops/bin \
+      /home/ssm-user/clickhouse-ops/logs \
+      /home/ssm-user/clickhouse-ops/run
     clickhouse-client --version
     `,
     tags: {
