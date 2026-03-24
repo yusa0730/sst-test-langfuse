@@ -1,15 +1,5 @@
 import { infraConfigResources } from "./infra-config";
 import { vpcResources } from "./vpc";
-import * as fs from "node:fs";
-import * as path from "node:path";
-
-const backupScript = fs
-  .readFileSync(path.resolve("infra/scripts/clickhouse/backup_clickhouse.sh"), "utf8")
-  .trimEnd();
-
-const restoreScript = fs
-  .readFileSync(path.resolve("infra/scripts/clickhouse/restore_clickhouse.sh"), "utf8")
-  .trimEnd();
 
 // 1. IAM Role for SSM
 const bastionRole = new aws.iam.Role(
@@ -153,12 +143,6 @@ const bastionInstance = new aws.ec2.Instance(
       /home/ssm-user/clickhouse-ops/bin \
       /home/ssm-user/clickhouse-ops/logs \
       /home/ssm-user/clickhouse-ops/run
-    cat > /home/ssm-user/clickhouse-ops/bin/backup_clickhouse.sh <<'__BACKUP_EOF__'
-    ${backupScript}
-    __BACKUP_EOF__
-    cat > /home/ssm-user/clickhouse-ops/bin/restore_clickhouse.sh <<'__RESTORE_EOF__'
-    ${restoreScript}
-    __RESTORE_EOF__
     chown ssm-user:ssm-user /home/ssm-user/clickhouse-ops/bin/*.sh
     chmod 0750 /home/ssm-user/clickhouse-ops/bin/*.sh
     clickhouse-client --version

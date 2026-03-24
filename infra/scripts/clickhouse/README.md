@@ -230,8 +230,6 @@ clickhouse-client \
 
 ## まず最初にやること
 
-新人の人は、まず以下だけ覚えれば十分です。
-
 ### バックアップ確認
 
 ```bash
@@ -337,3 +335,43 @@ ClickHouse のバージョン差異や実行ログを確認してください。
 - **restore** は必ず `--dry-run` で確認
 - 実行ログを確認
 - **わからなければ勝手に本実行しない**
+
+
+
+### 実行手順
+```
+export CH_PASSWORD=parameter storeのpassword
+```
+
+```
+echo $CH_PASSWORD
+```
+
+```
+./backup_clickhouse.sh --host clickhouse.langfuse.local --password "$CH_PASSWORD" --backup-path "clickhouse-backups/default-full-$(date -u +%Y%m%d)" --dry-run
+```
+
+```
+./backup_clickhouse.sh --host clickhouse.langfuse.local --password "$CH_PASSWORD" --backup-path "clickhouse-backups/default-full-$(date -u +%Y%m%d)"
+```
+
+バックアップされているかをbackup用のS3バケットを見て確認
+
+sst deployを行い冗長化構成を適用する
+
+```
+./restore_clickhouse.sh \
+  --host clickhouse-1.langfuse.local \
+  --replica-host clickhouse-2.langfuse.local \
+  --password "$CH_PASSWORD" \
+  --backup-path "clickhouse-backups/default-full-2026MMDD"
+  --dry-run
+```
+
+```
+./restore_clickhouse.sh \
+  --host clickhouse-1.langfuse.local \
+  --replica-host clickhouse-2.langfuse.local \
+  --password "$CH_PASSWORD" \
+  --backup-path "clickhouse-backups/default-full-2026MMDD"
+```
