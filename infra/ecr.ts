@@ -109,45 +109,9 @@ new aws.ecr.LifecyclePolicy(
     }),
   }
 );
-const clickHouseKeeperContainerRepository = new aws.ecr.Repository(
-  `${infraConfigResources.idPrefix}-clickhouse-keeper-ecr-repository-${$app.stage}`,
-  {
-    name: `${infraConfigResources.idPrefix}-clickhouse-keeper-ecr-repository-${$app.stage}`,
-    forceDelete: true,
-    imageScanningConfiguration: {
-      scanOnPush: true
-    },
-    imageTagMutability: "MUTABLE",
-  }
-);
-
-new aws.ecr.LifecyclePolicy(
-  `${infraConfigResources.idPrefix}-clickhouse-keeper-lifecycle-policy-${$app.stage}`,
-  {
-    repository: clickHouseKeeperContainerRepository.name,
-    policy: $jsonStringify({
-      rules: [
-        {
-          rulePriority: 1,
-          description: "Keep 14 days",
-          selection: {
-            tagStatus: "untagged",
-            countType: "sinceImagePushed",
-            countUnit: "days",
-            countNumber: 14,
-          },
-          action: {
-            type: "expire",
-          },
-        },
-      ],
-    }),
-  }
-);
 
 export const ecrResources = {
   webServerContainerRepository,
   asyncWorkerContainerRepository,
-  clickHouseContainerRepository,
-  clickHouseKeeperContainerRepository
+  clickHouseContainerRepository
 };
