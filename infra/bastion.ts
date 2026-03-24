@@ -143,8 +143,8 @@ const bastionInstance = new aws.ec2.Instance(
       /home/ssm-user/clickhouse-ops/bin \
       /home/ssm-user/clickhouse-ops/logs \
       /home/ssm-user/clickhouse-ops/run
-    aws s3 cp s3://langfuse-clickhouse-script-production/clickhouse/production/backup_clickhouse.sh /home/ssm-user/clickhouse-ops/bin/backup_clickhouse.sh",
-    aws s3 cp s3://langfuse-clickhouse-script-production/clickhouse/production/restore_clickhouse.sh /home/ssm-user/clickhouse-ops/bin/restore_clickhouse.sh",
+    aws s3 cp s3://langfuse-clickhouse-script-production/clickhouse/production/backup_clickhouse.sh /home/ssm-user/clickhouse-ops/bin/backup_clickhouse.sh
+    aws s3 cp s3://langfuse-clickhouse-script-production/clickhouse/production/restore_clickhouse.sh /home/ssm-user/clickhouse-ops/bin/restore_clickhouse.sh
     chown ssm-user:ssm-user /home/ssm-user/clickhouse-ops/bin/*.sh
     chmod 0750 /home/ssm-user/clickhouse-ops/bin/*.sh
     clickhouse-client --version
