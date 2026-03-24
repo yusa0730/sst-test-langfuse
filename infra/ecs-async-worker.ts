@@ -1,16 +1,16 @@
-import { cloudwatchResources } from "./cloudwatch";
-import { ecrResources } from "./ecr";
-import { ecsClusterResources } from "./ecs-cluster";
-import { elasticacheResources } from "./elasticache";
-import { iamResources } from "./iam";
 import { infraConfigResources } from "./infra-config";
-import { nlbResources } from "./nlb";
-import { rdsResources } from "./rds";
-import { s3Resources } from "./s3";
-import { securityGroupResources } from "./security-group";
 import { vpcResources } from "./vpc";
+import { cloudwatchResources } from "./cloudwatch";
+import { iamResources } from "./iam";
+import { securityGroupResources } from "./security-group";
+import { ecrResources } from "./ecr";
+import { serviceDiscoveryResources } from "./service-discovery";
+import { s3Resources } from "./s3";
+import { elasticacheResources } from "./elasticache";
+import { ecsClusterResources } from "./ecs-cluster";
+import { rdsResources } from "./rds";
 
-console.log("======ecs-async-worker.ts start======");
+console.log("======ecs.ts start======");
 
 rdsResources.databaseUrlSecret.arn.apply((arn) => {
   console.log("=======databaseUrlSecretArn=======");
@@ -69,7 +69,8 @@ ecrResources.asyncWorkerContainerRepository.repositoryUrl.apply((url) => {
             s3Resources.langfuseBlobBucket.id,
             elasticacheResources.elasticache.primaryEndpointAddress,
             elasticacheResources.elasticache.authToken,
-            nlbResources.nlb.dnsName,
+            serviceDiscoveryResources.clickhouseService.name,
+            serviceDiscoveryResources.langfuseNamespace.name,
             rdsResources.databaseUrlSecret.arn,
             infraConfigResources.clickhousePasswordParam.arn,
             infraConfigResources.webSaltParam.arn,
@@ -82,7 +83,8 @@ ecrResources.asyncWorkerContainerRepository.repositoryUrl.apply((url) => {
               blobBucketId,
               elasticachePrimaryEndpointAddress,
               elasticacheAuthToken,
-              nlbDnsName,
+              clickhouseServiceName,
+              langfuseNamespaceName,
               databaseUrlSecretArn,
               clickhousePasswordParamArn,
               webSaltParamArn,
@@ -103,6 +105,13 @@ ecrResources.asyncWorkerContainerRepository.repositoryUrl.apply((url) => {
                     protocol: "tcp",
                   },
                 ],
+                // healthCheck: {
+                //   command: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3030/api/health || exit 1"],
+                //   interval: 5,
+                //   timeout: 5,
+                //   retries: 10,
+                //   startPeriod: 1,
+                // },
                 logConfiguration: {
                   logDriver: "awslogs",
                   options: {
@@ -122,11 +131,11 @@ ecrResources.asyncWorkerContainerRepository.repositoryUrl.apply((url) => {
                   },
                   {
                     name: "CLICKHOUSE_MIGRATION_URL",
-                    value: `clickhouse://${nlbDnsName}:9000`
+                    value: `clickhouse://${clickhouseServiceName}.${langfuseNamespaceName}:9000`
                   },
                   {
                     name: "CLICKHOUSE_URL",
-                    value: `http://${nlbDnsName}:8123`
+                    value: `http://${clickhouseServiceName}.${langfuseNamespaceName}:8123`
                   },
                   {
                     name: "CLICKHOUSE_USER",
@@ -134,11 +143,7 @@ ecrResources.asyncWorkerContainerRepository.repositoryUrl.apply((url) => {
                   },
                   {
                     name: "CLICKHOUSE_CLUSTER_ENABLED",
-                    value: "true"
-                  },
-                  {
-                    name: "CLICKHOUSE_CLUSTER_NAME",
-                    value: "default"
+                    value: "false"
                   },
                   {
                     name: "LANGFUSE_S3_EVENT_UPLOAD_BUCKET",
@@ -186,7 +191,6 @@ ecrResources.asyncWorkerContainerRepository.repositoryUrl.apply((url) => {
                   },
                   { name: "LANGFUSE_LOG_LEVEL", value: "trace"},
                   { name: "OTEL_SDK_DISABLED", value: "true"},
-                  { name: "LANGFUSE_AUTO_CLICKHOUSE_MIGRATION_DISABLED", value: "true"},
                 ],
                 secrets: [
                   {
@@ -194,7 +198,7 @@ ecrResources.asyncWorkerContainerRepository.repositoryUrl.apply((url) => {
                     valueFrom: webSaltParamArn
                   },
                   {
-                    name: "ENCRYPTION_KEY",
+                    name: "ENCRIPTION_KEY",
                     valueFrom: encryptionKeyParamArn
                   },
                   {
