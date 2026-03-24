@@ -143,6 +143,8 @@ const bastionInstance = new aws.ec2.Instance(
       /home/ssm-user/clickhouse-ops/bin \
       /home/ssm-user/clickhouse-ops/logs \
       /home/ssm-user/clickhouse-ops/run
+    chown ssm-user:ssm-user /home/ssm-user/clickhouse-ops/bin/*.sh
+    chmod 0750 /home/ssm-user/clickhouse-ops/bin/*.sh
     clickhouse-client --version
     `,
     tags: {

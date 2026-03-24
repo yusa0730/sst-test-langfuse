@@ -200,7 +200,7 @@ const clickhouseScriptBucket = new aws.s3.Bucket(
   }
 );
 
-new aws.s3.BucketObject(
+new aws.s3.BucketObjectv2(
   `${infraConfigResources.idPrefix}-backup-script-${$app.stage}`,
   {
     bucket: clickhouseScriptBucket.id,
@@ -212,7 +212,7 @@ new aws.s3.BucketObject(
   }
 );
 
-new aws.s3.BucketObject(
+new aws.s3.BucketObjectv2(
   `${infraConfigResources.idPrefix}-restore-script-${$app.stage}`,
   {
     bucket: clickhouseScriptBucket.id,
