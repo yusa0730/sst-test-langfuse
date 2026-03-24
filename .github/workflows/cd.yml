@@ -74,6 +74,26 @@ jobs:
           aws-region: ap-northeast-1
           role-to-assume: ${{ secrets.AWS_OPEN_ID_CONNECT_ROLE }}
 
+      - name: Set script bucket name
+        run: |
+          echo "CLICKHOUSE_SCRIPT_BUCKET=langfuse-clickhouse-script-${{ needs.setup.outputs.env_value }}" >> "$GITHUB_ENV"
+          echo "CLICKHOUSE_SCRIPT_PREFIX=clickhouse/${{ needs.setup.outputs.env_value }}" >> "$GITHUB_ENV"
+
+      - name: Upload clickhouse scripts to S3
+        run: |
+          aws s3 cp \
+            infra/scripts/clickhouse/backup_clickhouse.sh \
+            "s3://${CLICKHOUSE_SCRIPT_BUCKET}/${CLICKHOUSE_SCRIPT_PREFIX}/backup_clickhouse.sh" \
+            --sse AES256
+
+          aws s3 cp \
+            infra/scripts/clickhouse/restore_clickhouse.sh \
+            "s3://${CLICKHOUSE_SCRIPT_BUCKET}/${CLICKHOUSE_SCRIPT_PREFIX}/restore_clickhouse.sh" \
+            --sse AES256
+
+      - name: Verify uploaded scripts
+        run: |
+          aws s3 ls "s3://${CLICKHOUSE_SCRIPT_BUCKET}/${CLICKHOUSE_SCRIPT_PREFIX}/"
       - name: sst-langfuse sst unlock
         run: pnpm --filter sst-langfuse run unlock --stage ${{ needs.setup.outputs.env_value }}
 
