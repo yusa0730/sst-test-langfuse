@@ -1,8 +1,7 @@
-import * as aws from "@pulumi/aws";
 import { bastionResources } from "./bastion";
 import { infraConfigResources } from "./infra-config";
-import { vpcResources } from "./vpc";
 import { rdsVpcResources } from "./rds-vpc";
+import { vpcResources } from "./vpc";
 
 console.log("====== security-group.ts start ======");
 
@@ -101,12 +100,56 @@ const asyncWorkerSecurityGroup = new aws.ec2.SecurityGroup(`${infraConfigResourc
     protocol: "-1",
     cidrBlocks: ["0.0.0.0/0"],
   }],
-  
+
   tags: {
     Name: `${infraConfigResources.idPrefix}-async-worker-sg-${$app.stage}`
   }
 });
 
+// NLB Security Group (for ClickHouse NLB)
+const nlbSecurityGroup = new aws.ec2.SecurityGroup(
+  `${infraConfigResources.idPrefix}-nlb-sg-${$app.stage}`,
+  {
+    name: `${infraConfigResources.idPrefix}-nlb-sg-${$app.stage}`,
+    vpcId: vpcResources.vpc.id,
+    description: "ClickHouse NLB Security Group",
+    ingress: [
+      {
+        fromPort: 8123,
+        toPort: 8123,
+        protocol: "tcp",
+        securityGroups: [
+          webServerSecurityGroup.id,
+          asyncWorkerSecurityGroup.id,
+          bastionResources.bastionSecurityGroup.id,
+        ],
+        description: "ClickHouse HTTP via NLB",
+      },
+      {
+        fromPort: 9000,
+        toPort: 9000,
+        protocol: "tcp",
+        securityGroups: [
+          webServerSecurityGroup.id,
+          asyncWorkerSecurityGroup.id,
+          bastionResources.bastionSecurityGroup.id,
+        ],
+        description: "ClickHouse Native TCP via NLB",
+      },
+    ],
+    egress: [{
+      fromPort: 0,
+      toPort: 0,
+      protocol: "-1",
+      cidrBlocks: ["0.0.0.0/0"],
+    }],
+    tags: {
+      Name: `${infraConfigResources.idPrefix}-nlb-sg-${$app.stage}`
+    }
+  }
+);
+
+// ClickHouse Server Security Group
 const clickHouseServerSecurityGroup = new aws.ec2.SecurityGroup(
   `${infraConfigResources.idPrefix}-clickhouse-server-sg-${$app.stage}`,
   {
@@ -119,23 +162,28 @@ const clickHouseServerSecurityGroup = new aws.ec2.SecurityGroup(
         toPort: 8123,
         protocol: "tcp",
         securityGroups: [
-          webServerSecurityGroup.id,
-          asyncWorkerSecurityGroup.id,
-          bastionResources.bastionSecurityGroup.id
+          nlbSecurityGroup.id,
+          bastionResources.bastionSecurityGroup.id,
         ],
-        description: "ClickHouse HTTP access",
+        description: "ClickHouse HTTP access from NLB",
       },
       {
         fromPort: 9000,
         toPort: 9000,
         protocol: "tcp",
         securityGroups: [
-          webServerSecurityGroup.id,
-          asyncWorkerSecurityGroup.id,
-          bastionResources.bastionSecurityGroup.id
+          nlbSecurityGroup.id,
+          bastionResources.bastionSecurityGroup.id,
         ],
-        description: "ClickHouse TCP access",
-      }
+        description: "ClickHouse Native TCP access from NLB",
+      },
+      {
+        fromPort: 9009,
+        toPort: 9009,
+        protocol: "tcp",
+        self: true,
+        description: "ClickHouse inter-server replication",
+      },
     ],
     egress: [{
       fromPort: 0,
@@ -145,6 +193,44 @@ const clickHouseServerSecurityGroup = new aws.ec2.SecurityGroup(
     }],
     tags: {
       Name: `${infraConfigResources.idPrefix}-clickhouse-server-sg-${$app.stage}`
+    }
+  }
+);
+
+// ClickHouse Keeper Security Group
+const clickHouseKeeperSecurityGroup = new aws.ec2.SecurityGroup(
+  `${infraConfigResources.idPrefix}-clickhouse-keeper-sg-${$app.stage}`,
+  {
+    name: `${infraConfigResources.idPrefix}-clickhouse-keeper-sg-${$app.stage}`,
+    vpcId: vpcResources.vpc.id,
+    description: "ClickHouse Keeper SG",
+    ingress: [
+      {
+        fromPort: 9181,
+        toPort: 9181,
+        protocol: "tcp",
+        securityGroups: [
+          clickHouseServerSecurityGroup.id,
+          bastionResources.bastionSecurityGroup.id,
+        ],
+        description: "Keeper client connections from ClickHouse servers",
+      },
+      {
+        fromPort: 9234,
+        toPort: 9234,
+        protocol: "tcp",
+        self: true,
+        description: "Keeper Raft consensus between keepers",
+      },
+    ],
+    egress: [{
+      fromPort: 0,
+      toPort: 0,
+      protocol: "-1",
+      cidrBlocks: ["0.0.0.0/0"],
+    }],
+    tags: {
+      Name: `${infraConfigResources.idPrefix}-clickhouse-keeper-sg-${$app.stage}`
     }
   }
 );
@@ -219,9 +305,10 @@ const efsSecurityGroup = new aws.ec2.SecurityGroup(
       toPort: 2049,
       protocol: "tcp",
       securityGroups: [
-        clickHouseServerSecurityGroup.id
+        clickHouseServerSecurityGroup.id,
+        clickHouseKeeperSecurityGroup.id,
       ],
-      description: "Allow click house access",
+      description: "Allow ClickHouse server and keeper access",
     }],
     egress: [{
       fromPort: 0,
@@ -236,37 +323,39 @@ const efsSecurityGroup = new aws.ec2.SecurityGroup(
 );
 
 const vpcEndpointSecurityGroup = new aws.ec2.SecurityGroup(
-  `${infraConfigResources.idPrefix}-interface-vpc-endpoint-sg-${$app.stage}`,
-  {
+`${infraConfigResources.idPrefix}-interface-vpc-endpoint-sg-${$app.stage}`,
+	{
     name: `${infraConfigResources.idPrefix}-interface-vpc-endpoint-sg-${$app.stage}`,
     vpcId: vpcResources.vpc.id,
     description: "interface-vpc-endpoint-sg",
     ingress: [{
-      fromPort: 443,
-      toPort: 443,
-      protocol: "tcp",
-      cidrBlocks: ["0.0.0.0/0"],
-      description: "allow all access",
+			fromPort: 443,
+			toPort: 443,
+			protocol: "tcp",
+			cidrBlocks: ["0.0.0.0/0"],
+			description: "allow all access",
     }],
     egress: [{
-      fromPort: 0,
-      toPort: 0,
-      protocol: "-1",
-      cidrBlocks: ["0.0.0.0/0"],
+			fromPort: 0,
+			toPort: 0,
+			protocol: "-1",
+			cidrBlocks: ["0.0.0.0/0"],
     }],
     tags: {
-      Name: `${infraConfigResources.idPrefix}-interface-vpc-endpoint-sg-${$app.stage}`
+    	Name: `${infraConfigResources.idPrefix}-interface-vpc-endpoint-sg-${$app.stage}`
     }
-  }
+	}
 );
 
 export const securityGroupResources = {
   albSecurityGroup,
   webServerSecurityGroup,
   asyncWorkerSecurityGroup,
+  nlbSecurityGroup,
   clickHouseServerSecurityGroup,
+  clickHouseKeeperSecurityGroup,
   auroraServerlessSecurityGroup,
   elasticacheServerSecurityGroup,
   efsSecurityGroup,
-  vpcEndpointSecurityGroup
+  vpcEndpointSecurityGroup,
 };
