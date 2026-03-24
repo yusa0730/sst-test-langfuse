@@ -8,12 +8,98 @@ on:
       - "qa"
       - "stg"
       - "prd"
-    tags-ignore: ['v*']
+    tags-ignore: ["v*"]
+
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+    branches:
+      - "main"
+      - "main-*"
+      - "develop"
+      - "qa"
+      - "stg"
+
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      env_value: ${{ steps.set_env.outputs.env_value }}
+    steps:
+      - name: set environment
+        id: set_env
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASE_REF="${{ github.event.pull_request.base.ref }}"
+          else
+            BASE_REF="${{ github.ref_name }}"
+          fi
+
+          case "${BASE_REF}" in
+            main|main-*)
+              echo "env_value=production" >> "$GITHUB_OUTPUT"
+              ;;
+            develop)
+              echo "env_value=dev" >> "$GITHUB_OUTPUT"
+              ;;
+            qa)
+              echo "env_value=qa" >> "$GITHUB_OUTPUT"
+              ;;
+            stg)
+              echo "env_value=stg" >> "$GITHUB_OUTPUT"
+              ;;
+            prd)
+              echo "env_value=production" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "Unsupported branch: ${BASE_REF}"
+              exit 1
+              ;;
+          esac
+
+  diff:
+    if: github.event_name == 'pull_request'
+    needs: setup
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      packages: read
+      pull-requests: write
+    environment:
+      name: ${{ needs.setup.outputs.env_value }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache for Turbo
+        uses: rharkor/caching-for-turbo@v1.5
+
+      - uses: ./.github/actions/setup-pnpm
+        with:
+          node_version: 22
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ap-northeast-1
+          role-to-assume: ${{ secrets.AWS_OPEN_ID_CONNECT_ROLE }}
+
+      - name: SST diff
+        env:
+          SST_PRINT_LOGS: "1"
+        run: pnpm exec sst diff --stage ${{ needs.setup.outputs.env_value }} --print-logs
+
   build:
+    if: github.event_name == 'push'
     permissions:
       contents: read
       packages: read
+    needs: setup
     runs-on: ubuntu-latest
 
     steps:
