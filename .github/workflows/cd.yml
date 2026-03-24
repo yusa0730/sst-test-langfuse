@@ -1,44 +1,47 @@
 name: CD
 
 on:
-  workflow_run:
-    workflows:
-      - CI
+  pull_request:
+    types:
+      - closed
     branches:
       - main
+      - main-*
       - develop
       - qa
       - stg
-    types:
-      - completed
 
 jobs:
   setup:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     outputs:
-      env_value: ${{ steps.set_env_main.outputs.env_value || steps.set_env_dev.outputs.env_value || steps.set_env_qa.outputs.env_value || steps.set_env_stg.outputs.env_value }}
+      env_value: ${{ steps.set_env.outputs.env_value }}
     steps:
-      - name: main
-        id: set_env_main
-        if: ${{ github.ref == 'refs/heads/main' }}
-        run: echo "env_value=production" >> $GITHUB_OUTPUT
-
-      - name: dev
-        id: set_env_dev
-        if: ${{ github.ref == 'refs/heads/develop' }}
-        run: echo "env_value=dev" >> $GITHUB_OUTPUT
-
-      - name: qa
-        id: set_env_qa
-        if: ${{ github.ref == 'refs/heads/qa' }}
-        run: echo "env_value=qa" >> $GITHUB_OUTPUT
-
-      - name: stg
-        id: set_env_stg
-        if: ${{ github.ref == 'refs/heads/stg' }}
-        run: echo "env_value=stg" >> $GITHUB_OUTPUT
+      - name: set environment
+        id: set_env
+        run: |
+          case "${{ github.event.pull_request.base.ref }}" in
+            main|main-*)
+              echo "env_value=production" >> "$GITHUB_OUTPUT"
+              ;;
+            develop)
+              echo "env_value=dev" >> "$GITHUB_OUTPUT"
+              ;;
+            qa)
+              echo "env_value=qa" >> "$GITHUB_OUTPUT"
+              ;;
+            stg)
+              echo "env_value=stg" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "Unsupported branch: ${{ github.event.pull_request.base.ref }}"
+              exit 1
+              ;;
+          esac
 
   deploy:
+    if: github.event.pull_request.merged == true
     needs: setup
     runs-on: ubuntu-latest
     permissions:
@@ -71,24 +74,35 @@ jobs:
           aws-region: ap-northeast-1
           role-to-assume: ${{ secrets.AWS_OPEN_ID_CONNECT_ROLE }}
 
-      # - name: bff sst telemetly
-      #   run: pnpm --filter bff run sst:telemetry --stage ${{ needs.setup.outputs.env_value }}
+      - name: Set script bucket name
+        run: |
+          echo "CLICKHOUSE_SCRIPT_BUCKET=langfuse-clickhouse-script-${{ needs.setup.outputs.env_value }}" >> "$GITHUB_ENV"
+          echo "CLICKHOUSE_SCRIPT_PREFIX=clickhouse/${{ needs.setup.outputs.env_value }}" >> "$GITHUB_ENV"
 
-      - name: sst-langfuse sst remove
-        run: pnpm run remove --stage ${{ needs.setup.outputs.env_value }}
-        # run: pnpm --filter sst-langfuse run remove --stage ${{ needs.setup.outputs.env_value }}
+      - name: Upload clickhouse scripts to S3
+        run: |
+          aws s3 cp \
+            infra/scripts/clickhouse/backup_clickhouse.sh \
+            "s3://${CLICKHOUSE_SCRIPT_BUCKET}/${CLICKHOUSE_SCRIPT_PREFIX}/backup_clickhouse.sh" \
+            --sse AES256
 
-      # - name: sst-langfuse sst refresh
-      #   run: pnpm --filter sst-langfuse run refresh --stage ${{ needs.setup.outputs.env_value }}
+          aws s3 cp \
+            infra/scripts/clickhouse/restore_clickhouse.sh \
+            "s3://${CLICKHOUSE_SCRIPT_BUCKET}/${CLICKHOUSE_SCRIPT_PREFIX}/restore_clickhouse.sh" \
+            --sse AES256
 
-      # - name: bff sst secret
-      #   run: |
-      #     echo "${{ secrets.CLOUDFRONT_PRIVATE_KEY }}" > ./tmp_key.pem
-      #     mv ./tmp_key.pem apps/bff/tmp_key.pem
-      #     pnpm --filter bff run sst:secret:privateKey --stage ${{ needs.setup.outputs.env_value }}
-      #     rm apps/bff/tmp_key.pem
+      - name: Verify uploaded scripts
+        run: |
+          aws s3 ls "s3://${CLICKHOUSE_SCRIPT_BUCKET}/${CLICKHOUSE_SCRIPT_PREFIX}/"
+      - name: sst-langfuse sst unlock
+        run: pnpm --filter sst-langfuse run unlock --stage ${{ needs.setup.outputs.env_value }}
 
-      # - name: langfuse sst deploy
-      #   id: langfuse_sst_deploy
-      #   run: pnpm run deploy --stage ${{ needs.setup.outputs.env_value }}
-      #   # run: pnpm --filter sst-langfuse run deploy --stage ${{ needs.setup.outputs.env_value }}
+      # - name: sst-langfuse sst remove
+      #   run: pnpm --filter sst-langfuse run remove --stage ${{ needs.setup.outputs.env_value }}
+
+      - name: sst-langfuse sst refresh
+        run: pnpm --filter sst-langfuse run refresh --stage ${{ needs.setup.outputs.env_value }}
+
+      - name: langfuse sst deploy
+        id: langfuse_sst_deploy
+        run: pnpm run deploy --stage ${{ needs.setup.outputs.env_value }}
