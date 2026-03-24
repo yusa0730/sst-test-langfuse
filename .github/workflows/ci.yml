@@ -92,7 +92,7 @@ jobs:
       - name: SST diff
         env:
           SST_PRINT_LOGS: "1"
-        run: pnpm --filter sst-langfuse run diff --stage ${{ needs.setup.outputs.env_value }} --verbose --print-logs
+        run: pnpm run diff --stage ${{ needs.setup.outputs.env_value }} --verbose --print-logs
 
   build:
     if: github.event_name == 'push'
