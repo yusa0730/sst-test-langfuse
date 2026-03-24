@@ -217,7 +217,7 @@ ecrResources.webServerContainerRepository.repositoryUrl.apply((url) => {
                   },
                   { name: "LANGFUSE_LOG_LEVEL", value: "trace"},
                   { name: "OTEL_SDK_DISABLED", value: "true"},
-                  { name: "LANGFUSE_AUTO_CLICKHOUSE_MIGRATION_DISABLED", value: "false"},
+                  { name: "LANGFUSE_AUTO_CLICKHOUSE_MIGRATION_DISABLED", value: "true"},
                 ],
                 secrets: [
                   {
