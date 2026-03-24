@@ -78,9 +78,24 @@ jobs:
       - name: Cache for Turbo
         uses: rharkor/caching-for-turbo@v1.5
 
-      - uses: ./.github/actions/setup-pnpm
+      # - uses: ./.github/actions/setup-pnpm
+      #   with:
+      #     node_version: 22
+      #   env:
+      #     NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup node 22
+        uses: actions/setup-node@v4
         with:
-          node_version: 22
+          node-version: 22
+          cache: pnpm
+          registry-url: "https://npm.pkg.github.com"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: install packages
+        run: pnpm install --frozen-lockfile
+        shell: bash
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
