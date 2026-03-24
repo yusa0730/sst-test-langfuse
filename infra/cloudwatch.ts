@@ -98,11 +98,26 @@ const ecsExecuteCommandLog = new aws.cloudwatch.LogGroup(
   }
 );
 
+const langfuseClickHouseKeeperLog = new aws.cloudwatch.LogGroup(
+  `${infraConfigResources.idPrefix}-clickhouse-keeper-log-${$app.stage}`,
+  {
+    name: `/aws/ecs/langfuse/clickhouse-keeper/${$app.stage}`,
+    retentionInDays: 7,
+    tags: {
+      Name: `${infraConfigResources.idPrefix}-clickhouse-keeper-log-${$app.stage}`,
+    }
+  },
+  {
+    retainOnDelete: true,
+  }
+);
+
 export const cloudwatchResources = {
   vpcFlowLog,
   langfuseWebServerLog,
   langfuseWorkerLog,
   langfuseClickHouseLog,
+  langfuseClickHouseKeeperLog,
   langfuseCacheSlowLog,
   langfuseCacheEngineLog,
   ecsExecuteCommandLog
