@@ -14,7 +14,8 @@
     "secret:private:encodeKey": "sst secret set ENCODED_PRIVATE_KEY $ENCODED_PRIVATE_KEY",
     "secret:public": "sst secret set ENCODED_PUBLIC_KEY < ./public_key.pem",
     "typecheck": "tsc",
-    "unlock": "sst unlock"
+    "unlock": "sst unlock",
+    "diff": "sst diff"
   },
   "dependencies": {
     "@pulumi/aws": "^7.0.0",
