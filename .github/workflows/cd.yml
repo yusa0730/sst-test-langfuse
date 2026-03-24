@@ -100,8 +100,8 @@ jobs:
       # - name: sst-langfuse sst remove
       #   run: pnpm run remove --stage ${{ needs.setup.outputs.env_value }}
 
-      - name: sst-langfuse sst refresh
-        run: pnpm run refresh --stage ${{ needs.setup.outputs.env_value }} --verbose --print-logs
+      # - name: sst-langfuse sst refresh
+      #   run: pnpm run refresh --stage ${{ needs.setup.outputs.env_value }} --verbose --print-logs
 
       - name: langfuse sst deploy
         id: langfuse_sst_deploy
