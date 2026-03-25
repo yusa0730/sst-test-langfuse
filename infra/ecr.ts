@@ -89,7 +89,7 @@ const clickHouseContainerRepository = new aws.ecr.Repository(
 new aws.ecr.LifecyclePolicy(
   `${infraConfigResources.idPrefix}-clickhouse-lifecycle-policy-${$app.stage}`,
   {
-    repository: asyncWorkerContainerRepository.name,
+    repository: clickHouseContainerRepository.name,
     policy: $jsonStringify({
       rules: [
         {
