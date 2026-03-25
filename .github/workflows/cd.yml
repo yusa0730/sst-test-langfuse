@@ -90,13 +90,18 @@ jobs:
       matrix:
         include:
           - name: web-server
-            dockerfile: apps/langfuse/src/web-server/Dockerfile
+            dockerfile: ./apps/langfuse/src/web-server/Dockerfile
+            context: ./apps/langfuse/src
             ecr_repo_suffix: web-server-ecr-repository
+
           - name: async-worker
-            dockerfile: apps/langfuse/src/async-worker/Dockerfile
+            dockerfile: ./apps/langfuse/src/async-worker/Dockerfile
+            context: ./apps/langfuse/src
             ecr_repo_suffix: async-worker-ecr-repository
+
           - name: clickhouse
-            dockerfile: apps/langfuse/src/clickhouse/Dockerfile
+            dockerfile: ./apps/langfuse/src/clickhouse/Dockerfile
+            context: ./apps/langfuse/src/clickhouse
             ecr_repo_suffix: clickhouse-ecr-repository
 
     steps:
@@ -142,7 +147,7 @@ jobs:
         if: steps.check_ecr.outputs.exists == 'true'
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ${{ matrix.context }}
           file: ${{ matrix.dockerfile }}
           push: true
           platforms: linux/arm64
