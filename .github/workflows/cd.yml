@@ -10,17 +10,40 @@ on:
       - develop
       - qa
       - stg
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Deployment environment"
+        required: true
+        type: choice
+        options:
+          - production
+          - dev
+          - qa
+          - stg
+
+env:
+  AWS_REGION: ap-northeast-1
+  ECR_ID_PREFIX: sst-test-langfuse
 
 jobs:
   setup:
-    if: github.event.pull_request.merged == true
+    if: |
+      (github.event_name == 'pull_request' && github.event.pull_request.merged == true) ||
+      github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     outputs:
       env_value: ${{ steps.set_env.outputs.env_value }}
+      image_tag: ${{ steps.set_image_tag.outputs.image_tag }}
     steps:
       - name: set environment
         id: set_env
         run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "env_value=${{ inputs.environment }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           case "${{ github.event.pull_request.base.ref }}" in
             main|main-*)
               echo "env_value=production" >> "$GITHUB_OUTPUT"
@@ -40,9 +63,21 @@ jobs:
               ;;
           esac
 
-  deploy:
-    if: github.event.pull_request.merged == true
-    needs: setup
+      - name: set image tag
+        id: set_image_tag
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "image_tag=${{ github.event.pull_request.merge_commit_sha || github.sha }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "image_tag=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          fi
+
+  build-and-push-langfuse-images:
+    if: |
+      (github.event_name == 'pull_request' && github.event.pull_request.merged == true) ||
+      github.event_name == 'workflow_dispatch'
+    needs:
+      - setup
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -50,12 +85,94 @@ jobs:
       packages: read
     environment:
       name: ${{ needs.setup.outputs.env_value }}
-    outputs:
-      username: ${{ steps.bff_sst_deploy.outputs.username }}
-      password: ${{ steps.bff_sst_deploy.outputs.password }}
-      database: ${{ steps.bff_sst_deploy.outputs.database }}
-      host: ${{ steps.bff_sst_deploy.outputs.host }}
-      port: ${{ steps.bff_sst_deploy.outputs.port }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: web-server
+            dockerfile: apps/langfuse/src/web-server/Dockerfile
+            ecr_repo_suffix: web-server-ecr-repository
+          - name: async-worker
+            dockerfile: apps/langfuse/src/async-worker/Dockerfile
+            ecr_repo_suffix: async-worker-ecr-repository
+          - name: clickhouse
+            dockerfile: apps/langfuse/src/clickhouse/Dockerfile
+            ecr_repo_suffix: clickhouse-ecr-repository
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: linux/arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_OPEN_ID_CONNECT_ROLE }}
+
+      - name: Login to Amazon ECR
+        id: login_ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set ECR repository name
+        id: ecr_repo
+        run: |
+          echo "repo_name=${{ env.ECR_ID_PREFIX }}-${{ matrix.ecr_repo_suffix }}-${{ needs.setup.outputs.env_value }}" >> "$GITHUB_OUTPUT"
+
+      - name: Check ECR repository exists
+        id: check_ecr
+        shell: bash
+        run: |
+          if aws ecr describe-repositories \
+            --repository-names "${{ steps.ecr_repo.outputs.repo_name }}" \
+            --region "${{ env.AWS_REGION }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "ECR repository exists: ${{ steps.ecr_repo.outputs.repo_name }}"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "ECR repository does not exist: ${{ steps.ecr_repo.outputs.repo_name }}"
+          fi
+
+      - name: Build and push ${{ matrix.name }}
+        if: steps.check_ecr.outputs.exists == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          platforms: linux/arm64
+          provenance: false
+          tags: |
+            ${{ steps.login_ecr.outputs.registry }}/${{ steps.ecr_repo.outputs.repo_name }}:latest
+            ${{ steps.login_ecr.outputs.registry }}/${{ steps.ecr_repo.outputs.repo_name }}:${{ needs.setup.outputs.image_tag }}
+          cache-from: type=registry,ref=${{ steps.login_ecr.outputs.registry }}/${{ steps.ecr_repo.outputs.repo_name }}:cache
+          cache-to: type=registry,ref=${{ steps.login_ecr.outputs.registry }}/${{ steps.ecr_repo.outputs.repo_name }}:cache,mode=max,oci-mediatypes=true,image-manifest=true
+
+      - name: Skip build because ECR repository does not exist
+        if: steps.check_ecr.outputs.exists != 'true'
+        run: |
+          echo "Skip build/push for ${{ matrix.name }}"
+          echo "Repository not found: ${{ steps.ecr_repo.outputs.repo_name }}"
+
+  deploy:
+    if: |
+      (github.event_name == 'pull_request' && github.event.pull_request.merged == true) ||
+      github.event_name == 'workflow_dispatch'
+    needs:
+      - setup
+      - build-and-push-langfuse-images
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      packages: read
+    environment:
+      name: ${{ needs.setup.outputs.env_value }}
 
     steps:
       - uses: actions/checkout@v4
@@ -71,7 +188,7 @@ jobs:
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: ap-northeast-1
+          aws-region: ${{ env.AWS_REGION }}
           role-to-assume: ${{ secrets.AWS_OPEN_ID_CONNECT_ROLE }}
 
       - name: Set script bucket name
@@ -94,14 +211,12 @@ jobs:
       - name: Verify uploaded scripts
         run: |
           aws s3 ls "s3://${CLICKHOUSE_SCRIPT_BUCKET}/${CLICKHOUSE_SCRIPT_PREFIX}/"
+
       - name: sst-langfuse sst unlock
         run: pnpm run unlock --stage ${{ needs.setup.outputs.env_value }}
 
-      # - name: sst-langfuse sst remove
-      #   run: pnpm run remove --stage ${{ needs.setup.outputs.env_value }}
-
-      - name: sst-langfuse sst refresh
-        run: pnpm run refresh --stage ${{ needs.setup.outputs.env_value }} --verbose --print-logs
+      # - name: sst-langfuse sst refresh
+      #   run: pnpm run refresh --stage ${{ needs.setup.outputs.env_value }} --verbose --print-logs
 
       - name: langfuse sst deploy
         id: langfuse_sst_deploy

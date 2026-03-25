@@ -1,187 +1,200 @@
-import { infraConfigResources } from "./infra-config";
-import { vpcResources } from "./vpc";
 import { cloudwatchResources } from "./cloudwatch";
-import { iamResources } from "./iam";
-import { securityGroupResources } from "./security-group";
 import { ecrResources } from "./ecr";
-import { s3Resources } from "./s3";
 import { ecsClusterResources } from "./ecs-cluster";
 import { efsResources } from "./efs";
+import { iamResources } from "./iam";
+import { infraConfigResources } from "./infra-config";
+import { s3Resources } from "./s3";
+import { securityGroupResources } from "./security-group";
 import { serviceDiscoveryResources } from "./service-discovery";
+import { vpcResources } from "./vpc";
 
-console.log("======ecs.ts start======");
+console.log("======ecs-clickhouse.ts start======");
 
-ecrResources.clickHouseContainerRepository.repositoryUrl.apply((url) => {
-  // ECS Service
-  ecsClusterResources.ecsCluster.addService(
-    `${infraConfigResources.idPrefix}-clickhouse-ecs-service-${$app.stage}`,
-    {
-      cpu: "1 vCPU",
-      memory: "8 GB",
-      architecture: "arm64",
-      scaling: {
-        min: 1,
-        max: 1,
-        cpuUtilization: 70,
-        memoryUtilization: 70,
+const idPrefix = infraConfigResources.idPrefix;
+const stage = $app.stage;
+
+// CD で push した特定タグを使いたいときに指定する。
+// 未指定なら従来どおり latest を使う。
+const clickhouseImageTag =
+  process.env.LANGFUSE_CLICKHOUSE_IMAGE_TAG || "latest";
+
+// Task Definition
+const clickhouseTaskDefinition = new aws.ecs.TaskDefinition(
+  `${idPrefix}-clickhouse-task-definition-${stage}`,
+  {
+    family: `${idPrefix}-clickhouse-task-definition-${stage}`,
+    trackLatest: true,
+    cpu: "4096",
+    memory: "8192",
+    networkMode: "awsvpc",
+    requiresCompatibilities: ["FARGATE"],
+    runtimePlatform: {
+      cpuArchitecture: "ARM64",
+      operatingSystemFamily: "LINUX",
+    },
+    executionRoleArn: iamResources.langfuseEcsTaskExecuteRole.arn,
+    taskRoleArn: iamResources.langfuseEcsTaskRole.arn,
+    volumes: [
+      {
+        name: "clickhouse-data",
+        efsVolumeConfiguration: {
+          fileSystemId: efsResources.efsFileSystem.id,
+          authorizationConfig: {
+            accessPointId: efsResources.clickhouseDataAccessPoint.id,
+            iam: "ENABLED",
+          },
+          transitEncryption: "ENABLED",
+        },
       },
-      transform: {
-        image: {
-          push: true,
-          tags: [`${url}:latest`],
-          // registries: [registryInfo],
-          dockerfile: {
-            location: "../../app/clickhouse/Dockerfile", // Path to Dockerfile
+      {
+        name: "clickhouse-log",
+        efsVolumeConfiguration: {
+          fileSystemId: efsResources.efsFileSystem.id,
+          authorizationConfig: {
+            accessPointId: efsResources.clickhouseLogAccessPoint.id,
+            iam: "ENABLED",
           },
-          context: {
-            location: "../../app/clickhouse", // Path to application source code
-          },
+          transitEncryption: "ENABLED",
         },
-        service: {
-          name: `${infraConfigResources.idPrefix}-clickhouse-ecs-service-${$app.stage}`,
-          enableExecuteCommand: true,
-          healthCheckGracePeriodSeconds: 180,
-          forceNewDeployment: true,
-          desiredCount: 1,
-          availabilityZoneRebalancing: "ENABLED",
-          launchType: "FARGATE",
-          serviceRegistries: {
-            registryArn: serviceDiscoveryResources.clickhouseService.arn,
-          },
-          networkConfiguration: {
-            subnets: vpcResources.clickHouseProtectedSubnets.map((subnet) => subnet.id),
-            assignPublicIp: false,
-            securityGroups: [
-              securityGroupResources.clickHouseServerSecurityGroup.id
-            ],
-          },
-        },
-        taskDefinition: {
-          executionRoleArn: iamResources.langfuseEcsTaskExecuteRole.arn,
-          taskRoleArn: iamResources.langfuseEcsTaskRole.arn,
-          volumes: [
+      },
+    ],
+    containerDefinitions: $util
+      .all([
+        ecrResources.clickHouseContainerRepository.repositoryUrl,
+        cloudwatchResources.langfuseClickHouseLog.id,
+        s3Resources.langfuseClickhouseBucket.id,
+        infraConfigResources.clickhousePasswordParam.arn,
+      ])
+      .apply(
+        ([
+          repositoryUrl,
+          logGroupId,
+          bucketId,
+          clickhousePasswordParamArn,
+        ]) =>
+          $jsonStringify([
             {
-              name: "clickhouse-data",
-              efsVolumeConfiguration: {
-                fileSystemId: efsResources.efsFileSystem.id,
-                authorizationConfig: {
-                  accessPointId: efsResources.clickhouseDataAccessPoint.id,
-                  iam: "ENABLED",
+              name: `${idPrefix}-clickhouse-ecs-task-${stage}`,
+              image: `${repositoryUrl}:${clickhouseImageTag}`,
+              essential: true,
+              ulimits: [
+                {
+                  name: "nofile",
+                  softLimit: 65535,
+                  hardLimit: 65535,
                 },
-                transitEncryption: "ENABLED",
-                // rootDirectory: "/"
+              ],
+              portMappings: [
+                {
+                  containerPort: 8123,
+                  hostPort: 8123,
+                  protocol: "tcp",
+                },
+                {
+                  containerPort: 9000,
+                  hostPort: 9000,
+                  protocol: "tcp",
+                },
+              ],
+              mountPoints: [
+                {
+                  sourceVolume: "clickhouse-data",
+                  containerPath: "/var/lib/clickhouse",
+                  readOnly: false,
+                },
+                {
+                  sourceVolume: "clickhouse-log",
+                  containerPath: "/var/log/clickhouse-server",
+                  readOnly: false,
+                },
+              ],
+              healthCheck: {
+                command: [
+                  "CMD-SHELL",
+                  "wget --no-verbose --tries=1 --spider http://localhost:8123/ping || exit 1",
+                ],
+                interval: 5,
+                timeout: 5,
+                retries: 10,
+                startPeriod: 1,
               },
+              logConfiguration: {
+                logDriver: "awslogs",
+                options: {
+                  "awslogs-region": infraConfigResources.mainRegion,
+                  "awslogs-group": logGroupId,
+                  "awslogs-stream-prefix": "clickhouse",
+                },
+              },
+              environment: [
+                {
+                  name: "CLICKHOUSE_DB",
+                  value: "default",
+                },
+                {
+                  name: "CLICKHOUSE_USER",
+                  value: "clickhouse",
+                },
+                {
+                  name: "AWS_REGION",
+                  value: infraConfigResources.mainRegion,
+                },
+                {
+                  name: "S3_BUCKET",
+                  value: bucketId,
+                },
+              ],
+              secrets: [
+                {
+                  name: "CLICKHOUSE_PASSWORD",
+                  valueFrom: clickhousePasswordParamArn,
+                },
+              ],
             },
-            {
-              name: "clickhouse-log",
-              efsVolumeConfiguration: {
-                fileSystemId: efsResources.efsFileSystem.id,
-                authorizationConfig: {
-                  accessPointId: efsResources.clickhouseLogAccessPoint.id,
-                  iam: "ENABLED",
-                },
-                transitEncryption: "ENABLED",
-                // rootDirectory: "/"
-              },
-            },
-          ],
-          runtimePlatform: {
-            operatingSystemFamily: "LINUX",
-            cpuArchitecture: "ARM64"
-          },
-          containerDefinitions: $util.all([
-            cloudwatchResources.langfuseClickHouseLog.id,
-            s3Resources.langfuseClickhouseBucket.id,
-            infraConfigResources.clickhousePasswordParam.arn
-          ])
-          .apply(
-            ([
-              logGroupId,
-              bucketId,
-              clickhousePasswordParamArn
-            ]) =>
-              $jsonStringify([
-              {
-                name: `${infraConfigResources.idPrefix}-clickhouse-ecs-task-${$app.stage}`,
-                image: `${url}:latest`,
-                essential: true,
-                ulimits: [
-                  {
-                    name: "nofile",
-                    softLimit: 65535,
-                    hardLimit: 65535
-                  }
-                ],
-                portMappings: [
-                  {
-                    // ClickHouse HTTP interface
-                    containerPort: 8123,
-                    hostPort: 8123,
-                    protocol: "tcp"
-                  },
-                  {
-                    // ClickHouse native interface
-                    containerPort: 9000,
-                    hostPort: 9000,
-                    protocol: "tcp"
-                  }
-                ],
-                // 試し用
-                mountPoints: [
-                  {
-                    sourceVolume: "clickhouse-data",
-                    containerPath: "/var/lib/clickhouse",
-                    readOnly: false,
-                  },
-                  {
-                    sourceVolume: "clickhouse-log",
-                    containerPath: "/var/log/clickhouse-server",
-                    readOnly: false,
-                  }
-                ],
-                healthCheck: {
-                  command: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8123/ping || exit 1"],
-                  interval: 5,
-                  timeout: 5,
-                  retries: 10,
-                  startPeriod: 1,
-                },
-                logConfiguration: {
-                  logDriver: "awslogs",
-                  options: {
-                    "awslogs-region": infraConfigResources.mainRegion,
-                    "awslogs-group": logGroupId,
-                    "awslogs-stream-prefix": "clickhouse",
-                  },
-                },
-                environment: [
-                  {
-                    name: "CLICKHOUSE_DB",
-                    value: "default"
-                  },
-                  {
-                    name: "CLICKHOUSE_USER",
-                    value: "clickhouse"
-                  },
-                  {
-                    name: "AWS_REGION",
-                    value: infraConfigResources.mainRegion
-                  },
-                  {
-                    name: "S3_BUCKET",
-                    value: bucketId
-                  },
-                ],
-                secrets: [
-                  {
-                    name: "CLICKHOUSE_PASSWORD",
-                    valueFrom: clickhousePasswordParamArn
-                  },
-                ],
-              },
-            ]),
-          )
-        }
-      }
-    });
-  });
+          ]),
+      ),
+  },
+);
+
+// ECS Service
+const clickhouseService = new aws.ecs.Service(
+  `${idPrefix}-clickhouse-ecs-service-${stage}`,
+  {
+    name: `${idPrefix}-clickhouse-ecs-service-${stage}`,
+    cluster: ecsClusterResources.ecsCluster.arn,
+    taskDefinition: clickhouseTaskDefinition.arn,
+    desiredCount: 1,
+    launchType: "FARGATE",
+    enableExecuteCommand: true,
+    healthCheckGracePeriodSeconds: 180,
+    forceNewDeployment: true,
+    availabilityZoneRebalancing: "ENABLED",
+    deploymentMaximumPercent: 200,
+    deploymentMinimumHealthyPercent: 100,
+    deploymentCircuitBreaker: {
+      enable: true,
+      rollback: true,
+    },
+    serviceRegistries: {
+      registryArn: serviceDiscoveryResources.clickhouseService.arn,
+    },
+    networkConfiguration: {
+      subnets: vpcResources.clickHouseProtectedSubnets.map(
+        (subnet) => subnet.id,
+      ),
+      assignPublicIp: false,
+      securityGroups: [
+        securityGroupResources.clickHouseServerSecurityGroup.id,
+      ],
+    },
+    tags: {
+      Name: `${idPrefix}-clickhouse-ecs-service-${stage}`,
+    },
+  },
+);
+
+export const ecsClickhouseResources = {
+  clickhouseTaskDefinition,
+  clickhouseService,
+};
