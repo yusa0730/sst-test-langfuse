@@ -191,9 +191,9 @@ const asyncWorkerTaskDefinition = new aws.ecs.TaskDefinition(
 
 // ECS Service
 const asyncWorkerService = new aws.ecs.Service(
-  `${idPrefix}-async-worker-ecs-service-${stage}`,
+  `${idPrefix}-async-worker-ecs-service-v2-${stage}`,
   {
-    name: `${idPrefix}-async-worker-ecs-service-${stage}`,
+    name: `${idPrefix}-async-worker-ecs-service-v2-${stage}`,
     cluster: ecsClusterResources.ecsCluster.arn,
     taskDefinition: asyncWorkerTaskDefinition.arn,
     desiredCount: 1,

@@ -218,9 +218,9 @@ const webTaskDefinition = new aws.ecs.TaskDefinition(
 
 // ECS Service
 const webService = new aws.ecs.Service(
-  `${idPrefix}-web-server-ecs-service-${stage}`,
+  `${idPrefix}-web-server-ecs-service-v2-${stage}`,
   {
-    name: `${idPrefix}-web-server-ecs-service-${stage}`,
+    name: `${idPrefix}-web-server-ecs-service-v2-${stage}`,
     cluster: ecsClusterResources.ecsCluster.arn,
     taskDefinition: webTaskDefinition.arn,
     desiredCount: 1,
