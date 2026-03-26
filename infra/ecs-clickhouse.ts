@@ -159,9 +159,9 @@ const clickhouseTaskDefinition = new aws.ecs.TaskDefinition(
 
 // ECS Service
 const clickhouseService = new aws.ecs.Service(
-  `${idPrefix}-clickhouse-ecs-service-${stage}`,
+  `${idPrefix}-clickhouse-ecs-service-v2-${stage}`,
   {
-    name: `${idPrefix}-clickhouse-ecs-service-${stage}`,
+    name: `${idPrefix}-clickhouse-ecs-service-v2-${stage}`,
     cluster: ecsClusterResources.ecsCluster.arn,
     taskDefinition: clickhouseTaskDefinition.arn,
     desiredCount: 1,
