@@ -56,9 +56,11 @@ const subnetGroup = new aws.rds.SubnetGroup(
 );
 
 const cluster = new aws.rds.Cluster(
+  // `${infraConfigResources.idPrefix}-aurora-serverless-cluster-${$app.stage}`,
   `${infraConfigResources.idPrefix}-aurora-serverless-cluster-${$app.stage}`,
   {
-    clusterIdentifier: `${infraConfigResources.idPrefix}-aurora-serverless-cluster-${$app.stage}`,
+    clusterIdentifier: `${infraConfigResources.idPrefix}-aurora-cluster-${$app.stage}`,
+    // clusterIdentifier: `${infraConfigResources.idPrefix}-aurora-cluster-restore-${$app.stage}`,
     engine: "aurora-postgresql",
     engineMode: "provisioned",
     engineVersion: "16.6",
@@ -96,7 +98,8 @@ const cluster = new aws.rds.Cluster(
     },
   },
   {
-    ignoreChanges: ["availabilityZones"] // sst refresh後にsst deployをするとavailabilityZonesの差分が必ず出てくるので設定
+    ignoreChanges: ["availabilityZones"], // sst refresh後にsst deployをするとavailabilityZonesの差分が必ず出てくるので設定
+    import: "sst-test-langfuse-aurora-cluster-production"
   }
 );
 

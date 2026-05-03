@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls /Users/ishizawayuusaku/Desktop/sst/sst-test-langfuse/infra/*.ts)",
+      "Bash(git:*)",
+      "Bash(aws efs describe-file-systems:*)",
+      "Bash(aws efs describe-access-points:*)",
+      "Bash(aws ecs list-tasks:*)",
+      "Bash(aws ecs list-clusters:*)",
+      "Bash(aws ecs describe-tasks:*)",
+      "Bash(aws ecs execute-command:*)"
+    ]
+  }
+}

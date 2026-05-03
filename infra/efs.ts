@@ -94,6 +94,7 @@ const efsFileSystem = new aws.efs.FileSystem(
   {
     // creationToken: "clickhouse-data",
     performanceMode: "generalPurpose",
+    throughputMode: "elastic",
     encrypted: true,
     lifecyclePolicies: [{
       transitionToIa: "AFTER_30_DAYS",
@@ -101,7 +102,8 @@ const efsFileSystem = new aws.efs.FileSystem(
     tags: {
       Name: `${infraConfigResources.idPrefix}-efs-filesystem-${$app.stage}`,
     },
-  }
+  },
+  { import: "fs-0789dca6ba021a6f2" }
 );
 
 // Mount Target (各AZのPrivate Subnetに作成)
@@ -112,7 +114,8 @@ vpcResources.clickHouseProtectedSubnets.forEach((subnet, index) => {
         fileSystemId: efsFileSystem.id,
         subnetId: subnet.id,
         securityGroups: [securityGroupResources.efsSecurityGroup.id],
-      }
+      },
+      { import: index === 0 ? "fsmt-0e1cfbea6e6687842" : "fsmt-053fc80883483e87a" }
   );
 });
 
@@ -149,9 +152,10 @@ const clickhouseDataAccessPoint = new aws.efs.AccessPoint(
       uid: 101,
     },
     rootDirectory: {
-      path: "/clickhouse-data", // これは成功する
+      // path: "/clickhouse-data", // これは成功する
       // path: "/var/lib/clickhouse",
       // path: "/",
+      path: "/aws-backup-restore_2026-04-14T08-20-46-704373367Z/clickhouse-data",
       creationInfo: {
         ownerGid: 101,
         ownerUid: 101,
@@ -161,7 +165,8 @@ const clickhouseDataAccessPoint = new aws.efs.AccessPoint(
     tags: {
       Name: `${infraConfigResources.idPrefix}-data-efs-access-point-${$app.stage}`,
     },
-  }
+  },
+  // { import: "fsap-0dd5350dc0d66c018" }
 );
 
 const clickhouseLogAccessPoint = new aws.efs.AccessPoint(
@@ -173,9 +178,10 @@ const clickhouseLogAccessPoint = new aws.efs.AccessPoint(
       uid: 101,
     },
     rootDirectory: {
-      path: "/clickhouse-log", // これは成功する
+      // path: "/clickhouse-log", // これは成功する
       // path: "/var/lib/clickhouse",
       // path: "/",
+      path: "/aws-backup-restore_2026-04-14T08-20-46-704373367Z/clickhouse-log",
       creationInfo: {
         ownerGid: 101,
         ownerUid: 101,
@@ -185,7 +191,8 @@ const clickhouseLogAccessPoint = new aws.efs.AccessPoint(
     tags: {
       Name: `${infraConfigResources.idPrefix}-log-efs-access-point-${$app.stage}`,
     },
-  }
+  },
+  // { import: "fsap-03f1129ec40cd2499" }
 );
 
 export const efsResources = {

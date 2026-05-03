@@ -359,12 +359,14 @@ echo $CH_PASSWORD
 
 sst deployを行い冗長化構成を適用する
 
+clickhouse用ECS taskが作成されstatusがRunningになった後、web用とasync用のECS taskdefinitionの環境変数LANGFUSE_AUTO_CLICKHOUSE_MIGRATION_DISABLEDをfalseに変えて再度sst deployする
+
 ```
 ./restore_clickhouse.sh \
   --host clickhouse-1.langfuse.local \
   --replica-host clickhouse-2.langfuse.local \
   --password "$CH_PASSWORD" \
-  --backup-path "clickhouse-backups/default-full-2026MMDD"
+  --backup-path "clickhouse-backups/default-full-20260324" \
   --dry-run
 ```
 

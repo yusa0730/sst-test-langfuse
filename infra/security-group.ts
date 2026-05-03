@@ -214,15 +214,26 @@ const efsSecurityGroup = new aws.ec2.SecurityGroup(
     name: `${infraConfigResources.idPrefix}-efs-sg-${$app.stage}`,
     vpcId: vpcResources.vpc.id,
     description: "EFS SG",
-    ingress: [{
-      fromPort: 2049,
-      toPort: 2049,
-      protocol: "tcp",
-      securityGroups: [
-        clickHouseServerSecurityGroup.id
-      ],
-      description: "Allow click house access",
-    }],
+    ingress: [
+      {
+        fromPort: 2049,
+        toPort: 2049,
+        protocol: "tcp",
+        securityGroups: [
+          clickHouseServerSecurityGroup.id,
+        ],
+        description: "Allow ClickHouse access",
+      },
+      {
+        fromPort: 2049,
+        toPort: 2049,
+        protocol: "tcp",
+        securityGroups: [
+          bastionResources.bastionSecurityGroup.id,
+        ],
+        description: "Allow Bastion access for EFS inspection",
+      },
+    ],
     egress: [{
       fromPort: 0,
       toPort: 0,
