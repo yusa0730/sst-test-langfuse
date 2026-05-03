@@ -102,12 +102,51 @@ new aws.s3.BucketOwnershipControls(
   },
 );
 
-const langfuseEventBucket = new aws.s3.Bucket(
-  `${infraConfigResources.idPrefix}-event-bucket-${$app.stage}`,
+// バージョニング（AWS Backup の S3 バックアップに必須）
+new aws.s3.BucketVersioning(
+  `${infraConfigResources.idPrefix}-blob-bucket-versioning-${$app.stage}`,
   {
-    bucket: `${infraConfigResources.idPrefix}-event-bucket-${$app.stage}`,
+    bucket: langfuseBlobBucket.id,
+    versioningConfiguration: {
+      status: "Enabled",
+    },
+  },
+);
+
+// ライフサイクル（バージョニング有効時の旧バージョン蓄積によるコスト増加を抑制）
+// new aws.s3.BucketLifecycleConfigurationV2(
+//   `${infraConfigResources.idPrefix}-blob-bucket-lifecycle-${$app.stage}`,
+//   {
+//     bucket: langfuseBlobBucket.id,
+//     rules: [
+//       {
+//         id: "expire-noncurrent-versions",
+//         status: "Enabled",
+//         noncurrentVersionExpiration: {
+//           noncurrentDays: 90,
+//         },
+//       },
+//     ],
+//   },
+// );
+
+// const langfuseEventBucket = new aws.s3.Bucket(
+//   `${infraConfigResources.idPrefix}-event-bucket-${$app.stage}`,
+//   {
+//     bucket: `${infraConfigResources.idPrefix}-event-bucket-${$app.stage}`,
+//     forceDestroy: false,
+//   },
+// );
+
+const langfuseEventBucket = new aws.s3.Bucket(
+  `${infraConfigResources.idPrefix}-event-restore-bucket-${$app.stage}`,
+  {
+    bucket: `${infraConfigResources.idPrefix}-event-restore-bucket-${$app.stage}`,
     forceDestroy: false,
   },
+  {
+    import: "sst-test-langfuse-event-restore-bucket-production"
+  }
 );
 
 // aclの設定
@@ -120,6 +159,34 @@ new aws.s3.BucketOwnershipControls(
     },
   },
 );
+
+// バージョニング（AWS Backup の S3 バックアップに必須）
+new aws.s3.BucketVersioning(
+  `${infraConfigResources.idPrefix}-event-bucket-versioning-${$app.stage}`,
+  {
+    bucket: langfuseEventBucket.id,
+    versioningConfiguration: {
+      status: "Enabled",
+    },
+  },
+);
+
+// ライフサイクル（バージョニング有効時の旧バージョン蓄積によるコスト増加を抑制）
+// new aws.s3.BucketLifecycleConfigurationV2(
+//   `${infraConfigResources.idPrefix}-event-bucket-lifecycle-${$app.stage}`,
+//   {
+//     bucket: langfuseEventBucket.id,
+//     rules: [
+//       {
+//         id: "expire-noncurrent-versions",
+//         status: "Enabled",
+//         noncurrentVersionExpiration: {
+//           noncurrentDays: 90,
+//         },
+//       },
+//     ],
+//   },
+// );
 
 const langfuseClickhouseBucket = new aws.s3.Bucket(
   `${infraConfigResources.idPrefix}-clickhouse-bucket-${$app.stage}`,
@@ -139,6 +206,34 @@ new aws.s3.BucketOwnershipControls(
     },
   },
 );
+
+// バージョニング（AWS Backup の S3 バックアップに必須）
+new aws.s3.BucketVersioning(
+  `${infraConfigResources.idPrefix}-clickhouse-bucket-versioning-${$app.stage}`,
+  {
+    bucket: langfuseClickhouseBucket.id,
+    versioningConfiguration: {
+      status: "Enabled",
+    },
+  },
+);
+
+// ライフサイクル（バージョニング有効時の旧バージョン蓄積によるコスト増加を抑制）
+// new aws.s3.BucketLifecycleConfigurationV2(
+//   `${infraConfigResources.idPrefix}-clickhouse-bucket-lifecycle-${$app.stage}`,
+//   {
+//     bucket: langfuseClickhouseBucket.id,
+//     rules: [
+//       {
+//         id: "expire-noncurrent-versions",
+//         status: "Enabled",
+//         noncurrentVersionExpiration: {
+//           noncurrentDays: 90,
+//         },
+//       },
+//     ],
+//   },
+// );
 
 const clickhouseBackupBucket = new aws.s3.Bucket(
   `${infraConfigResources.idPrefix}-clickhouse-backup-bucket-${$app.stage}`,

@@ -39,6 +39,7 @@ const clickhouseTaskDefinition = new aws.ecs.TaskDefinition(
       {
         name: "clickhouse-data",
         efsVolumeConfiguration: {
+          // TODO: テスト確認後に efsResources 参照に戻す
           fileSystemId: efsResources.efsFileSystem.id,
           authorizationConfig: {
             accessPointId: efsResources.clickhouseDataAccessPoint.id,
@@ -50,6 +51,7 @@ const clickhouseTaskDefinition = new aws.ecs.TaskDefinition(
       {
         name: "clickhouse-log",
         efsVolumeConfiguration: {
+          // TODO: テスト確認後に efsResources 参照に戻す
           fileSystemId: efsResources.efsFileSystem.id,
           authorizationConfig: {
             accessPointId: efsResources.clickhouseLogAccessPoint.id,

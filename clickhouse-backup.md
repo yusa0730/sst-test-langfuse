@@ -2,7 +2,7 @@
 ```
 aws ecs execute-command \
   --cluster sst-test-langfuse-cluster-production \
-  --task arn:aws:ecs:ap-northeast-1:218317313594:task/sst-test-langfuse-cluster-production/4ccc93407cc54193be2f4b762887147e \
+  --task arn:aws:ecs:ap-northeast-1:<ACCOUNT_ID>:task/sst-test-langfuse-cluster-production/4ccc93407cc54193be2f4b762887147e \
   --container sst-test-langfuse-clickhouse-ecs-task-production \
   --interactive \
   --command "/bin/sh"

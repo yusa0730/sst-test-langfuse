@@ -34,5 +34,6 @@ export default $config({
     await import('./infra/ecs-async-worker');
     await import('./infra/ecs-web');
     await import('./infra/cloudfront');
+    await import('./infra/backup');
   }
 });
